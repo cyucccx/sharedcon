@@ -105,6 +105,14 @@ if __name__ == '__main__':
         class_col = 'label'
         hate_class = "hate"
         not_hate_class = "nothate"
+    elif args.load_dataset == "cold":
+        train_dataset = pd.read_csv(os.path.join('COLDataset', 'COLDataset', 'train.csv'), delimiter=',', header=0)
+        valid_dataset = pd.read_csv(os.path.join('COLDataset', 'COLDataset', 'dev.csv'), delimiter=',', header=0)
+        test_dataset = pd.read_csv(os.path.join('COLDataset', 'COLDataset', 'test.csv'), delimiter=',', header=0)
+        input_col = 'TEXT'
+        class_col = 'label'
+        hate_class = 1
+        not_hate_class = 0
     else:
         raise NotImplementedError
     
@@ -117,6 +125,9 @@ if __name__ == '__main__':
         model = AnglE.from_pretrained('SeanLee97/angle-bert-base-uncased-nli-en-v1', pooling_strategy='cls_avg').cuda()
     elif args.load_sent_emb_model == "sbert":
         model = SentenceTransformer("all-MiniLM-L6-v2")
+    elif args.load_sent_emb_model == "sbert-multi":
+        # multilingual sentence embeddings
+        model = SentenceTransformer("sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
     else:
         raise NotImplementedError
     

@@ -1,3 +1,5 @@
+import os
+
 from torch import nn
 from torch.nn import functional as F
 from transformers import BertModel
@@ -7,19 +9,34 @@ class primary_encoder_v2_no_pooler_for_con(nn.Module):
 
     def __init__(self,hidden_size,emotion_size,encoder_type="bert-base-uncased"):
         super(primary_encoder_v2_no_pooler_for_con, self).__init__()
+        local_files_only = os.environ.get("HF_LOCAL_FILES_ONLY", "0") == "1"
 
         if encoder_type == "bert-base-uncased":
             options_name = "bert-base-uncased"
-            self.encoder_supcon = BertModel.from_pretrained(options_name,num_labels=emotion_size)
+            self.encoder_supcon = BertModel.from_pretrained(
+                options_name,
+                num_labels=emotion_size,
+                local_files_only=local_files_only,
+            )
             self.encoder_supcon.encoder.config.gradient_checkpointing=False
 
-        elif encoder_type == "hatebert":
+        if encoder_type == "hatebert":
             options_name = "hate_bert"
-            self.encoder_supcon = BertModel.from_pretrained(options_name,num_labels=emotion_size)
+            self.encoder_supcon = BertModel.from_pretrained(
+                options_name,
+                num_labels=emotion_size,
+                local_files_only=local_files_only,
+            )
             self.encoder_supcon.encoder.config.gradient_checkpointing=False
 
         else:
-            raise NotImplementedError
+            # Allow generic model names like "bert-base-multilingual-cased"
+            self.encoder_supcon = BertModel.from_pretrained(
+                encoder_type,
+                num_labels=emotion_size,
+                local_files_only=local_files_only,
+            )
+            self.encoder_supcon.encoder.config.gradient_checkpointing=False
 
         self.pooler_dropout = nn.Dropout(0.1)
         self.label = nn.Linear(hidden_size,emotion_size)

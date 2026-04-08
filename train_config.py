@@ -1,4 +1,4 @@
-dataset = ["simcse_sbic_c25"]
+dataset = ["sbert-multi_ihc_pure_c10"]
 
 
 tuning_param  = ["lambda_loss", "main_learning_rate","train_batch_size","eval_batch_size","nepoch","temperature","SEED","dataset", "decay"] ## list of possible paramters to be tuned
@@ -13,7 +13,7 @@ main_learning_rate = [1e-5]
 
 run_name = "simcse"
 loss_type = ""              # only for saving file name
-model_type = "bert-base-uncased"
+model_type = "bert-base-multilingual-cased"
 SEED = [0]
 w_aug = True                # using shared semantics as positive pairs
 w_double = False
