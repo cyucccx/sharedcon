@@ -168,6 +168,7 @@ preprocessed_data/
 clustered_dataset/
 save/
 COLDataset/
+simcse_source/
 
 # Figures
 figure_making.ipynb

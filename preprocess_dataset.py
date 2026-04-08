@@ -4,7 +4,7 @@ import argparse
 import numpy as np
 import random
 
-from transformers import AutoTokenizer
+from transformers import AutoTokenizer, BertTokenizer
 
 import numpy as np
 import os
@@ -17,6 +17,12 @@ random.seed(0)
 
 def preprocess_data(sent_emb_model, dataset, tokenizer_type):
 	os.makedirs("preprocessed_data", exist_ok=True)
+	local_files_only = os.environ.get("HF_LOCAL_FILES_ONLY", "0") == "1"
+
+	def load_tokenizer():
+		if tokenizer_type.startswith("bert-"):
+			return BertTokenizer.from_pretrained(tokenizer_type, local_files_only=local_files_only)
+		return AutoTokenizer.from_pretrained(tokenizer_type, local_files_only=local_files_only)
 
 	if "ihc" in dataset:
 		class2int = {'not_hate':0 ,'implicit_hate': 1}
@@ -36,7 +42,7 @@ def preprocess_data(sent_emb_model, dataset, tokenizer_type):
 			
 			cluster_value = []
 			post_value = []
-			for (columnName, columnData) in data.iteritems():
+			for (columnName, columnData) in data.items():
 				if columnName == 'cluster':
 					cluster_value = columnData.values
 				elif columnName == 'post':
@@ -52,7 +58,7 @@ def preprocess_data(sent_emb_model, dataset, tokenizer_type):
 					augmented_post.append(data["centroid_sample"][i])
 
 				print("Tokenizing data")
-				tokenizer = AutoTokenizer.from_pretrained(tokenizer_type)
+				tokenizer = load_tokenizer()
 				tokenized_post =tokenizer.batch_encode_plus(post).input_ids
 				tokenized_post_augmented =tokenizer.batch_encode_plus(augmented_post).input_ids
 
@@ -73,7 +79,7 @@ def preprocess_data(sent_emb_model, dataset, tokenizer_type):
 
 			else:
 				print("Tokenizing data")
-				tokenizer = AutoTokenizer.from_pretrained(tokenizer_type)
+				tokenizer = load_tokenizer()
 				tokenized_post = tokenizer.batch_encode_plus(post).input_ids
 
 				processed_data = {}
@@ -109,7 +115,7 @@ def preprocess_data(sent_emb_model, dataset, tokenizer_type):
 			cluster_value = []
 			post_value = []
 
-			for (columnName, columnData) in data.iteritems():
+			for (columnName, columnData) in data.items():
 				if columnName == 'cluster':
 					cluster_value = columnData.values
 				elif columnName == 'post':
@@ -126,7 +132,7 @@ def preprocess_data(sent_emb_model, dataset, tokenizer_type):
 					augmented_post.append(data["centroid_sample"][i])
 
 				print("Tokenizing data")
-				tokenizer = AutoTokenizer.from_pretrained(tokenizer_type)
+				tokenizer = load_tokenizer()
 				tokenized_post =tokenizer.batch_encode_plus(post).input_ids
 				tokenized_post_augmented =tokenizer.batch_encode_plus(augmented_post).input_ids
 
@@ -147,7 +153,7 @@ def preprocess_data(sent_emb_model, dataset, tokenizer_type):
 			else:
 
 				print("Tokenizing data")
-				tokenizer = AutoTokenizer.from_pretrained(tokenizer_type)
+				tokenizer = load_tokenizer()
 				tokenized_post =tokenizer.batch_encode_plus(post).input_ids
 
 				processed_data = {}
@@ -174,8 +180,6 @@ def preprocess_data(sent_emb_model, dataset, tokenizer_type):
 		for datatype in ["train","valid","test"]:
 			datafile = data_home + datatype + ".csv"
 			data = pd.read_csv(datafile, sep=',') 
-			data.iteritems = data.items		# AttributeError: 'DataFrame' object has no attribute 'iteritems'
-
 			label1,label2,post = [],[],[]
 
 			for i,one_class in enumerate(data["label"]):
@@ -184,7 +188,7 @@ def preprocess_data(sent_emb_model, dataset, tokenizer_type):
 			cluster_value = []
 			post_value = []
 
-			for (columnName, columnData) in data.iteritems():
+			for (columnName, columnData) in data.items():
 				if columnName == 'cluster':
 					cluster_value = columnData.values
 				elif columnName == 'text':
@@ -204,7 +208,7 @@ def preprocess_data(sent_emb_model, dataset, tokenizer_type):
 				# 	augmented_post.append(one_aug_sent)
 
 				print("Tokenizing data")
-				tokenizer = AutoTokenizer.from_pretrained(tokenizer_type)
+				tokenizer = load_tokenizer()
 				tokenized_post =tokenizer.batch_encode_plus(post).input_ids
 				tokenized_post_augmented =tokenizer.batch_encode_plus(augmented_post).input_ids
 
@@ -224,7 +228,7 @@ def preprocess_data(sent_emb_model, dataset, tokenizer_type):
 
 			else:
 				print("Tokenizing data")
-				tokenizer = AutoTokenizer.from_pretrained(tokenizer_type)
+				tokenizer = load_tokenizer()
 				tokenized_post =tokenizer.batch_encode_plus(post).input_ids
 
 				processed_data = {}
