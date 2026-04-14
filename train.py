@@ -17,14 +17,17 @@ from sklearn.metrics import f1_score
 import loss_sharedcon
 from model import primary_encoder_v2_no_pooler_for_con
 
-from transformers import AdamW,get_linear_schedule_with_warmup, BertForSequenceClassification 
+from transformers import get_linear_schedule_with_warmup, BertForSequenceClassification
+from torch.optim import AdamW
 
 from tqdm import tqdm
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Credits https://github.com/varsha33/LCL_loss
 def train(epoch,train_loader,model_main,loss_function,optimizer,lr_scheduler,log):
 
-    model_main.cuda()
+    model_main.to(device)
     model_main.train()
 
     total_true,total_pred_1,acc_curve_1 = [],[],[]
@@ -78,11 +81,10 @@ def train(epoch,train_loader,model_main,loss_function,optimizer,lr_scheduler,log
         if (label.size()[0] is not train_batch_size):# Last batch may have length different than log.param.batch_size
             continue
 
-        if torch.cuda.is_available():
-            text = text.cuda()
-            attn = attn.cuda()
-            label = label.cuda()
-            cluster_label = cluster_label.cuda()
+        text = text.to(device)
+        attn = attn.to(device)
+        label = label.to(device)
+        cluster_label = cluster_label.to(device)
 
         #####################################################################################
         if log.param.w_aug: # text split
@@ -244,10 +246,9 @@ def test(test_loader,model_main,log):
             label = torch.tensor(label)
             label = torch.autograd.Variable(label).long()
 
-            if torch.cuda.is_available():
-                text = text.cuda()
-                attn = attn.cuda()
-                label = label.cuda()
+            text = text.to(device)
+            attn = attn.to(device)
+            label = label.to(device)
 
             last_layer_hidden_states, supcon_feature_1 = model_main.get_cls_features_ptrnsp(text,attn) # #v2
             pred_1 = model_main(last_layer_hidden_states)
@@ -392,4 +393,3 @@ if __name__ == '__main__':
         log.param.label_size = 2
         
         cl_train(log)
-

@@ -1,4 +1,4 @@
-dataset = ["sbert-multi_ihc_cold_pseudo_c10"]
+dataset = ["sbert-multi_ihc_pure_cold_pseudo_c10"]
 
 
 tuning_param  = ["lambda_loss", "main_learning_rate","train_batch_size","eval_batch_size","nepoch","temperature","SEED","dataset", "decay"] ## list of possible paramters to be tuned

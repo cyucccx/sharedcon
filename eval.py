@@ -19,8 +19,6 @@ from sklearn.metrics import f1_score
 from model import primary_encoder_v2_no_pooler_for_con
 from collate_fns_sharedcon import collate_fn_sbic
 
-from transformers import AdamW,get_linear_schedule_with_warmup, BertForSequenceClassification 
-
 from tqdm import tqdm
 
 # Credits https://github.com/varsha33/LCL_loss

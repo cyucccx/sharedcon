@@ -166,7 +166,11 @@ raw_dataset/
 sup-simcse-roberta-large/
 preprocessed_data/
 clustered_dataset/
-save/
+save/**/.DS_Store
+save/**/model.pt
+save/**/acc_curve.json
+save/**/log.json
+save/**/cold_train_predictions.csv
 COLDataset/
 simcse_source/
 

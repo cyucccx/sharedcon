@@ -1,0 +1,22 @@
+{
+    "param": {
+        "dataset": "sbert-multi_ihc_pure_c10",
+        "train_batch_size": 8,
+        "eval_batch_size": 8,
+        "hidden_size": 768,
+        "SEED": 0,
+        "model_type": "bert-base-multilingual-cased",
+        "load_dir": "./save/simcse/sbert-multi_ihc_pure_c10/0",
+        "label_size": 2
+    },
+    "valid_f1_score_1": {
+        "macro": 0.762701659582913,
+        "weighted": 0.8020960283096327
+    },
+    "test_f1_score_1": {
+        "macro": 0.766565243990275,
+        "weighted": 0.8093707918593752
+    },
+    "valid_accuracy_1": 80.23037771229573,
+    "test_accuracy_1": 80.98553829673273
+}

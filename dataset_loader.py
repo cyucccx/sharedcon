@@ -4,7 +4,14 @@ import torch
 import torch.utils.data
 from torch.utils.data import Dataset
 
-from collate_fns_sharedcon import collate_fn_ihc, collate_fn_w_aug_ihc_imp_con, collate_fn_dynahate, collate_fn_sbic, collate_fn_w_aug_sbic_imp_con, collate_fn_w_aug_ihc_imp_con_double, collate_fn_w_aug_sbic_imp_con_double, collate_fn_w_aug_dynahate_imp_con
+from collate_fns_sharedcon import (
+    collate_fn_ihc,
+    collate_fn_w_aug_ihc_imp_con,
+    collate_fn_dynahate,
+    collate_fn_sbic,
+    collate_fn_w_aug_sbic_imp_con,
+    collate_fn_w_aug_dynahate_imp_con,
+)
 
 # Credits https://github.com/varsha33/LCL_loss
 class ihc_dataset(Dataset):
@@ -125,7 +132,7 @@ def get_dataloader(train_batch_size,eval_batch_size,dataset,seed=None,w_aug=True
     if "ihc" in dataset:
         collate_fn = collate_fn_ihc
         if w_double:
-            collate_fn_w_aug = collate_fn_w_aug_ihc_imp_con_double # original1, original2, .... aug1, aug2 
+            raise NotImplementedError("w_double=True is not supported for ihc; double-augmentation collate_fn is missing.")
         else:
             collate_fn_w_aug = collate_fn_w_aug_ihc_imp_con # original1, original2, .... aug1, aug2 
     elif "dynahate" in dataset:
@@ -158,4 +165,3 @@ def get_dataloader(train_batch_size,eval_batch_size,dataset,seed=None,w_aug=True
 
 
     return train_iter,valid_iter,test_iter
-
