@@ -2,7 +2,7 @@ tuning_param  = ["dataset", "load_dir"]
 dataset = ["sbert-multi_ihc_pure_c10"]  # dataset for evaluation
 
 # saved model location (folder containing model.pt from your training run)
-load_dir = ["./save/simcse/sbert-multi_ihc_pure_cold_pseudo_c10/0"]
+load_dir = ["./save/sbert-multi/sbert-multi_ihc_pure_cold_pseudo_c10/0"]
 
 train_batch_size = 8
 eval_batch_size = 8
