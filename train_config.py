@@ -14,6 +14,7 @@ main_learning_rate = [1e-5]
 run_name = "simcse"
 loss_type = ""              # only for saving file name
 model_type = "bert-base-multilingual-cased"
+init_checkpoint_dir = "./save/simcse/sbert-multi_ihc_pure_c10/0"
 SEED = [0]
 w_aug = True                # using shared semantics as positive pairs
 w_double = False
@@ -21,4 +22,4 @@ w_separate = False
 w_sup = False
 save = True                 # saving model parameters
 
-param = {"temperature":temperature,"run_name":run_name,"dataset":dataset,"main_learning_rate":main_learning_rate,"train_batch_size":train_batch_size,"eval_batch_size":eval_batch_size,"hidden_size":hidden_size,"nepoch":nepoch,"dataset":dataset,"lambda_loss":lambda_loss,"loss_type":loss_type,"decay":decay,"SEED":SEED,"model_type":model_type,"w_aug":w_aug, "w_sup":w_sup, "save":save,"w_double":w_double, "w_separate":w_separate}
+param = {"temperature":temperature,"run_name":run_name,"dataset":dataset,"main_learning_rate":main_learning_rate,"train_batch_size":train_batch_size,"eval_batch_size":eval_batch_size,"hidden_size":hidden_size,"nepoch":nepoch,"dataset":dataset,"lambda_loss":lambda_loss,"loss_type":loss_type,"decay":decay,"SEED":SEED,"model_type":model_type,"init_checkpoint_dir":init_checkpoint_dir,"w_aug":w_aug, "w_sup":w_sup, "save":save,"w_double":w_double, "w_separate":w_separate}

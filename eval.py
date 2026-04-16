@@ -21,6 +21,21 @@ from collate_fns_sharedcon import collate_fn_sbic
 
 from tqdm import tqdm
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+
+def get_run_timestamp():
+    return time.strftime("%Y%m%d_%H%M%S", time.localtime())
+
+
+def write_json_with_timestamp(save_dir, base_name, payload, run_timestamp):
+    canonical_path = os.path.join(save_dir, base_name)
+    dated_path = os.path.join(save_dir, f"{os.path.splitext(base_name)[0]}_{run_timestamp}.json")
+    with open(canonical_path, 'w') as fp:
+        json.dump(payload, fp, indent=4)
+    with open(dated_path, 'w') as fp:
+        json.dump(payload, fp, indent=4)
+
 # Credits https://github.com/varsha33/LCL_loss
 def test(test_loader,model_main,log):
     model_main.eval()
@@ -58,10 +73,9 @@ def test(test_loader,model_main,log):
             label = torch.tensor(label)
             label = torch.autograd.Variable(label).long()
 
-            if torch.cuda.is_available():
-                text = text.cuda()
-                attn = attn.cuda()
-                label = label.cuda()
+            text = text.to(device)
+            attn = attn.to(device)
+            label = label.to(device)
 
             last_layer_hidden_states, supcon_feature_1 = model_main.get_cls_features_ptrnsp(text,attn) # #v2
             pred_1 = model_main(last_layer_hidden_states)
@@ -118,7 +132,7 @@ def build_cold_train_inference_loader(log):
     return train_loader, train_posts
 
 
-def save_prediction_csv(output_path, posts, save_pred):
+def save_prediction_csv(output_path, posts, save_pred, run_timestamp=None):
     pred_probs = np.array(save_pred["pred_prob_1"])
     pred_frame = {
         "row_id": list(range(len(save_pred["pred_1"]))),
@@ -131,7 +145,11 @@ def save_prediction_csv(output_path, posts, save_pred):
     for label_idx in range(pred_probs.shape[1]):
         pred_frame[f"prob_{label_idx}"] = pred_probs[:, label_idx].tolist()
 
-    pd.DataFrame(pred_frame).to_csv(output_path, index=False)
+    pred_df = pd.DataFrame(pred_frame)
+    pred_df.to_csv(output_path, index=False)
+    if run_timestamp is not None:
+        dated_output_path = output_path.replace(".csv", f"_{run_timestamp}.csv")
+        pred_df.to_csv(dated_output_path, index=False)
 
 ##################################################################################################
 def cl_test(log):
@@ -145,7 +163,7 @@ def cl_test(log):
     torch.backends.cudnn.deterministic = True #
     torch.backends.cudnn.benchmark = False #
 
-
+    run_timestamp = get_run_timestamp()
 
     print("#######################start run#######################")
     print("log:", log)
@@ -157,12 +175,11 @@ def cl_test(log):
     
     #################################################################
     # load model
-    model_main.load_state_dict(torch.load(os.path.join(log.param.load_dir, "model.pt")))
+    model_main.load_state_dict(torch.load(os.path.join(log.param.load_dir, "model.pt"), map_location=device))
     print(f"model is loaded from {log.param.load_dir}")
     
     model_main.eval()
-    if torch.cuda.is_available():
-        model_main.cuda()
+    model_main.to(device)
     ###################################################################
 
     val_acc_1,val_f1_1,val_save_pred = test(valid_data,model_main,log)
@@ -172,7 +189,7 @@ def cl_test(log):
         train_data, train_posts = build_cold_train_inference_loader(log)
         train_acc_1, train_f1_1, train_save_pred = test(train_data, model_main, log)
         train_pred_path = os.path.join(log.param.load_dir, f"{log.param.dataset}_train_predictions.csv")
-        save_prediction_csv(train_pred_path, train_posts, train_save_pred)
+        save_prediction_csv(train_pred_path, train_posts, train_save_pred, run_timestamp=run_timestamp)
         print(f"Train Accuracy: {train_acc_1:.2f} Train F1: {train_f1_1['macro']:.2f}")
         print(f"Train predictions are saved to {train_pred_path}")
         log.train_accuracy_1 = train_acc_1
@@ -189,20 +206,15 @@ def cl_test(log):
     log.test_accuracy_1 = test_acc_1
 
     if log.param.dataset == "dynahate":
-        with open(os.path.join(log.param.load_dir, "dynahate_test_log.json"), 'w') as fp:
-            json.dump(dict(log), fp,indent=4)
+        write_json_with_timestamp(log.param.load_dir, "dynahate_test_log.json", dict(log), run_timestamp)
     elif log.param.dataset == "sbic":
-        with open(os.path.join(log.param.load_dir, "sbic_test_log.json"), 'w') as fp:
-            json.dump(dict(log), fp,indent=4)
+        write_json_with_timestamp(log.param.load_dir, "sbic_test_log.json", dict(log), run_timestamp)
     elif "ihc" in log.param.dataset:
-        with open(os.path.join(log.param.load_dir, "ihc_test_log.json"), 'w') as fp:
-            json.dump(dict(log), fp,indent=4)
+        write_json_with_timestamp(log.param.load_dir, "ihc_test_log.json", dict(log), run_timestamp)
     elif log.param.dataset == "sbic_hate":
-        with open(os.path.join(log.param.load_dir, "sbic_hate_test_log.json"), 'w') as fp:
-            json.dump(dict(log), fp,indent=4)
+        write_json_with_timestamp(log.param.load_dir, "sbic_hate_test_log.json", dict(log), run_timestamp)
     elif "cold" in log.param.dataset:
-        with open(os.path.join(log.param.load_dir, "cold_test_log.json"), 'w') as fp:
-            json.dump(dict(log), fp,indent=4)
+        write_json_with_timestamp(log.param.load_dir, "cold_test_log.json", dict(log), run_timestamp)
     else:
         raise NotImplementedError
 

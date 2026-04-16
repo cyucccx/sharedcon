@@ -81,7 +81,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # load raw dataset
-    if args.load_dataset == "ihc_pure":
+    if args.load_dataset == "ihc_pure" or args.load_dataset == "ihc_pure_cold_pseudo":
         train_dataset = pd.read_csv(os.path.join('raw_dataset', args.load_dataset, 'train.tsv'), delimiter='\t', header=0)
         valid_dataset = pd.read_csv(os.path.join('raw_dataset', args.load_dataset, 'valid.tsv'), delimiter='\t', header=0)
         test_dataset = pd.read_csv(os.path.join('raw_dataset', args.load_dataset, 'test.tsv'), delimiter='\t', header=0)
@@ -187,7 +187,7 @@ if __name__ == '__main__':
     
     # save the dataset
     os.makedirs(f"clustered_dataset/{args.load_sent_emb_model}/{args.load_dataset}_c{args.cluster_num}", exist_ok=True)
-    if args.load_dataset == "ihc_pure":
+    if args.load_dataset == "ihc_pure" or args.load_dataset == "ihc_pure_cold_pseudo":
         total_train_dataset.to_csv(os.path.join(f"clustered_dataset/{args.load_sent_emb_model}/{args.load_dataset}_c{args.cluster_num}", "train.tsv"), sep="\t", index=False)
         total_valid_dataset.to_csv(os.path.join(f"clustered_dataset/{args.load_sent_emb_model}/{args.load_dataset}_c{args.cluster_num}", "valid.tsv"), sep="\t", index=False)
         total_test_dataset.to_csv(os.path.join(f"clustered_dataset/{args.load_sent_emb_model}/{args.load_dataset}_c{args.cluster_num}", "test.tsv"), sep="\t", index=False)

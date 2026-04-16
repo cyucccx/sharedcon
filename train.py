@@ -24,6 +24,27 @@ from tqdm import tqdm
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+
+def get_run_timestamp():
+    return time.strftime("%Y%m%d_%H%M%S", time.localtime())
+
+
+def write_json_with_timestamp(save_home, base_name, payload, run_timestamp):
+    canonical_path = os.path.join(save_home, base_name)
+    dated_path = os.path.join(save_home, f"{os.path.splitext(base_name)[0]}_{run_timestamp}.json")
+    with open(canonical_path, 'w') as fp:
+        json.dump(payload, fp, indent=4)
+    with open(dated_path, 'w') as fp:
+        json.dump(payload, fp, indent=4)
+
+
+def save_model_with_timestamp(save_home, model_main, run_timestamp):
+    canonical_path = os.path.join(save_home, 'model.pt')
+    dated_path = os.path.join(save_home, f"model_{run_timestamp}.pt")
+    torch.save(model_main.state_dict(), canonical_path)
+    torch.save(model_main.state_dict(), dated_path)
+    return canonical_path, dated_path
+
 # Credits https://github.com/varsha33/LCL_loss
 def train(epoch,train_loader,model_main,loss_function,optimizer,lr_scheduler,log):
 
@@ -299,8 +320,14 @@ def cl_train(log):
     losses = {"contrastive":loss_sharedcon.SupConLoss(temperature=log.param.temperature),"ce_loss":nn.CrossEntropyLoss(),"lambda_loss":log.param.lambda_loss,"contrastive_for_double":loss_sharedcon.SupConLoss_for_double(temperature=log.param.temperature)}
 
     model_run_time = time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime())
+    run_timestamp = get_run_timestamp()
 
     model_main = primary_encoder_v2_no_pooler_for_con(log.param.hidden_size,log.param.label_size,log.param.model_type)
+    init_checkpoint_dir = getattr(log.param, "init_checkpoint_dir", None)
+    if init_checkpoint_dir:
+        checkpoint_path = os.path.join(init_checkpoint_dir, "model.pt")
+        model_main.load_state_dict(torch.load(checkpoint_path, map_location=device))
+        print(f"fine-tune starts from checkpoint: {checkpoint_path}")
 
 
     total_params = list(model_main.named_parameters())
@@ -337,8 +364,7 @@ def cl_train(log):
         print('====> Epoch: {} Train loss_1: {:.4f}'.format(epoch, train_loss_1))
 
         os.makedirs(save_home,exist_ok=True)
-        with open(save_home+"/acc_curve.json", 'w') as fp:
-            json.dump({"train_acc_curve_1":total_train_acc_curve_1}, fp,indent=4)
+        write_json_with_timestamp(save_home, "acc_curve.json", {"train_acc_curve_1":total_train_acc_curve_1}, run_timestamp)
 
         if epoch == 1:
              best_criterion = 0.0
@@ -363,15 +389,14 @@ def cl_train(log):
             log.train_accuracy_1 = train_acc_1
 
             ## load the model
-            with open(save_home+"/log.json", 'w') as fp:
-                json.dump(dict(log), fp,indent=4)
-            fp.close()
+            write_json_with_timestamp(save_home, "log.json", dict(log), run_timestamp)
 
             ###############################################################################
             # save model
             if log.param.save:
-                torch.save(model_main.state_dict(), os.path.join(save_home, 'model.pt'))
-                print(f"best model is saved at {os.path.join(save_home, 'model.pt')}")
+                canonical_model_path, dated_model_path = save_model_with_timestamp(save_home, model_main, run_timestamp)
+                print(f"best model is saved at {canonical_model_path}")
+                print(f"dated checkpoint is saved at {dated_model_path}")
 
 ##################################################################################################
 

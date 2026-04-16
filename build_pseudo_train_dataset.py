@@ -39,7 +39,7 @@ def parse_args():
     )
     parser.add_argument(
         "--pseudo_predictions",
-        default="save/simcse/sbert-multi_ihc_pure_c10/0/cold_train_predictions.csv",
+        default="pseudo_clusters/sbert-multi_cold_conf099_k50/selected_cluster_samples.csv",
         type=str,
         help="Path to eval.py output CSV containing pseudo predictions.",
     )
