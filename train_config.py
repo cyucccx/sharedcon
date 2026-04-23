@@ -1,4 +1,5 @@
-dataset = ["sbert-multi_ihc_pure_cold_pseudo_c10"]
+# Baseline run: train directly from the existing IHC clustered/tokenized data.
+dataset = ["sbert-multi_ihc_pure_c10"]
 
 
 tuning_param  = ["lambda_loss", "main_learning_rate","train_batch_size","eval_batch_size","nepoch","temperature","SEED","dataset", "decay"] ## list of possible paramters to be tuned
@@ -14,12 +15,14 @@ main_learning_rate = [1e-5]
 run_name = "sbert-multi"
 loss_type = ""              # only for saving file name
 model_type = "bert-base-multilingual-cased"
-init_checkpoint_dir = "./save/sbert-multi/sbert-multi_ihc_pure_c10/0"
+init_checkpoint_dir = None
+init_checkpoint_filename = None
 SEED = [0]
 w_aug = True                # using shared semantics as positive pairs
 w_double = False
 w_separate = False
 w_sup = False
 save = True                 # saving model parameters
+skip_eval = True            # skip valid/test during train; use eval.py afterwards
 
-param = {"temperature":temperature,"run_name":run_name,"dataset":dataset,"main_learning_rate":main_learning_rate,"train_batch_size":train_batch_size,"eval_batch_size":eval_batch_size,"hidden_size":hidden_size,"nepoch":nepoch,"dataset":dataset,"lambda_loss":lambda_loss,"loss_type":loss_type,"decay":decay,"SEED":SEED,"model_type":model_type,"init_checkpoint_dir":init_checkpoint_dir,"w_aug":w_aug, "w_sup":w_sup, "save":save,"w_double":w_double, "w_separate":w_separate}
+param = {"temperature":temperature,"run_name":run_name,"dataset":dataset,"main_learning_rate":main_learning_rate,"train_batch_size":train_batch_size,"eval_batch_size":eval_batch_size,"hidden_size":hidden_size,"nepoch":nepoch,"dataset":dataset,"lambda_loss":lambda_loss,"loss_type":loss_type,"decay":decay,"SEED":SEED,"model_type":model_type,"init_checkpoint_dir":init_checkpoint_dir,"init_checkpoint_filename":init_checkpoint_filename,"w_aug":w_aug, "w_sup":w_sup, "save":save,"skip_eval":skip_eval,"w_double":w_double, "w_separate":w_separate}

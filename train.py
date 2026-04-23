@@ -11,8 +11,14 @@ import torch.utils.data
 from torch import nn
 
 import train_config as train_config
-from dataset_loader import get_dataloader
-from util import iter_product
+from dataset_loader import get_dataloader, resolve_preprocessed_path
+from util import (
+    build_versioned_output_path,
+    get_run_tag,
+    get_run_version,
+    iter_product,
+    resolve_checkpoint_path,
+)
 from sklearn.metrics import f1_score
 import loss_sharedcon
 from model import primary_encoder_v2_no_pooler_for_con
@@ -25,25 +31,36 @@ from tqdm import tqdm
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-def get_run_timestamp():
-    return time.strftime("%Y%m%d_%H%M%S", time.localtime())
-
-
-def write_json_with_timestamp(save_home, base_name, payload, run_timestamp):
-    canonical_path = os.path.join(save_home, base_name)
-    dated_path = os.path.join(save_home, f"{os.path.splitext(base_name)[0]}_{run_timestamp}.json")
-    with open(canonical_path, 'w') as fp:
+def write_versioned_json(save_home, base_name, payload, run_tag, run_version):
+    dated_path = build_versioned_output_path(save_home, base_name, run_tag, run_version=run_version)
+    with open(dated_path, "w") as fp:
         json.dump(payload, fp, indent=4)
-    with open(dated_path, 'w') as fp:
-        json.dump(payload, fp, indent=4)
+    return dated_path
 
 
-def save_model_with_timestamp(save_home, model_main, run_timestamp):
-    canonical_path = os.path.join(save_home, 'model.pt')
-    dated_path = os.path.join(save_home, f"model_{run_timestamp}.pt")
-    torch.save(model_main.state_dict(), canonical_path)
+def save_versioned_model(save_home, model_main, run_tag, run_version):
+    dated_path = build_versioned_output_path(save_home, "model.pt", run_tag, run_version=run_version)
     torch.save(model_main.state_dict(), dated_path)
-    return canonical_path, dated_path
+    return dated_path
+
+
+def apply_env_overrides(param):
+    env_overrides = {
+        "TRAIN_DATASET": "dataset",
+        "TRAIN_RUN_NAME": "run_name",
+        "INIT_CHECKPOINT_DIR": "init_checkpoint_dir",
+        "INIT_CHECKPOINT_FILENAME": "init_checkpoint_filename",
+    }
+    for env_name, param_name in env_overrides.items():
+        env_value = os.environ.get(env_name)
+        if env_value:
+            param[param_name] = env_value
+
+    env_skip_eval = os.environ.get("TRAIN_SKIP_EVAL")
+    if env_skip_eval is not None:
+        param["skip_eval"] = env_skip_eval.lower() in {"1", "true", "yes"}
+
+    return param
 
 # Credits https://github.com/varsha33/LCL_loss
 def train(epoch,train_loader,model_main,loss_function,optimizer,lr_scheduler,log):
@@ -314,18 +331,25 @@ def cl_train(log):
 
     print("#######################start run#######################")
     print("log:", log)
+    preprocessed_path = resolve_preprocessed_path(log.param.dataset)
+    print(f"training data will be loaded from: {preprocessed_path}")
     train_data,valid_data,test_data = get_dataloader(log.param.train_batch_size,log.param.eval_batch_size,log.param.dataset,w_aug=log.param.w_aug,w_double=log.param.w_double,label_list=None)
     print("len(train_data):", len(train_data)) 
 
     losses = {"contrastive":loss_sharedcon.SupConLoss(temperature=log.param.temperature),"ce_loss":nn.CrossEntropyLoss(),"lambda_loss":log.param.lambda_loss,"contrastive_for_double":loss_sharedcon.SupConLoss_for_double(temperature=log.param.temperature)}
 
     model_run_time = time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime())
-    run_timestamp = get_run_timestamp()
+    run_tag = get_run_tag()
+    run_version = get_run_version()
 
     model_main = primary_encoder_v2_no_pooler_for_con(log.param.hidden_size,log.param.label_size,log.param.model_type)
     init_checkpoint_dir = getattr(log.param, "init_checkpoint_dir", None)
+    init_checkpoint_filename = getattr(log.param, "init_checkpoint_filename", None)
     if init_checkpoint_dir:
-        checkpoint_path = os.path.join(init_checkpoint_dir, "model.pt")
+        checkpoint_path = resolve_checkpoint_path(
+            init_checkpoint_dir,
+            preferred_filename=init_checkpoint_filename,
+        )
         model_main.load_state_dict(torch.load(checkpoint_path, map_location=device))
         print(f"fine-tune starts from checkpoint: {checkpoint_path}")
 
@@ -351,20 +375,33 @@ def cl_train(log):
     else:
         save_home = "./save/"+model_run_time+"/"+log.param.loss_type+"/"+log.param.dataset+"/"+str(log.param.SEED)+"/"
 
+    print(f"training outputs will be written under: {save_home}")
+
     total_train_acc_curve_1, total_val_acc_curve_1 = [],[]
+    skip_eval = getattr(log.param, "skip_eval", False)
 
     for epoch in range(1, log.param.nepoch + 1):
 
         train_loss_1,train_acc_1,train_acc_curve_1 = train(epoch,train_data,model_main, losses,optimizer,lr_scheduler,log)
-        val_acc_1,val_f1_1,val_save_pred = test(valid_data,model_main,log)
-        test_acc_1,test_f1_1,test_save_pred = test(test_data,model_main,log)
 
         total_train_acc_curve_1.extend(train_acc_curve_1)
 
         print('====> Epoch: {} Train loss_1: {:.4f}'.format(epoch, train_loss_1))
+        if skip_eval:
+            print(f'Train Accuracy: {train_acc_1:.2f}')
+            continue
+
+        val_acc_1,val_f1_1,val_save_pred = test(valid_data,model_main,log)
+        test_acc_1,test_f1_1,test_save_pred = test(test_data,model_main,log)
 
         os.makedirs(save_home,exist_ok=True)
-        write_json_with_timestamp(save_home, "acc_curve.json", {"train_acc_curve_1":total_train_acc_curve_1}, run_timestamp)
+        dated_acc_curve_path = write_versioned_json(
+            save_home,
+            "acc_curve.json",
+            {"train_acc_curve_1":total_train_acc_curve_1},
+            run_tag,
+            run_version,
+        )
 
         if epoch == 1:
              best_criterion = 0.0
@@ -389,14 +426,20 @@ def cl_train(log):
             log.train_accuracy_1 = train_acc_1
 
             ## load the model
-            write_json_with_timestamp(save_home, "log.json", dict(log), run_timestamp)
+            dated_log_path = write_versioned_json(save_home, "log.json", dict(log), run_tag, run_version)
 
             ###############################################################################
             # save model
             if log.param.save:
-                canonical_model_path, dated_model_path = save_model_with_timestamp(save_home, model_main, run_timestamp)
-                print(f"best model is saved at {canonical_model_path}")
+                dated_model_path = save_versioned_model(save_home, model_main, run_tag, run_version)
+                print(f"log is saved at {dated_log_path}")
+                print(f"acc curve is saved at {dated_acc_curve_path}")
                 print(f"dated checkpoint is saved at {dated_model_path}")
+
+    if skip_eval and log.param.save:
+        os.makedirs(save_home, exist_ok=True)
+        dated_model_path = save_versioned_model(save_home, model_main, run_tag, run_version)
+        print(f"dated checkpoint is saved at {dated_model_path}")
 
 ##################################################################################################
 
@@ -414,6 +457,8 @@ if __name__ == '__main__':
 
         for num,val in enumerate(param_com):
             log.param[param_list[0][num]] = val
+
+        log.param = apply_env_overrides(log.param)
 
         log.param.label_size = 2
         

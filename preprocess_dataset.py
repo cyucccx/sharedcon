@@ -9,15 +9,18 @@ from transformers import AutoTokenizer, BertTokenizer
 import numpy as np
 import os
 
+from util import ensure_output_path_is_new
 # Credits https://github.com/varsha33/LCL_loss
 np.random.seed(0)
 random.seed(0)
 
 
 
-def preprocess_data(sent_emb_model, dataset, tokenizer_type):
+def preprocess_data(sent_emb_model, dataset, tokenizer_type, output_path=None):
 	os.makedirs("preprocessed_data", exist_ok=True)
 	local_files_only = os.environ.get("HF_LOCAL_FILES_ONLY", "0") == "1"
+	output_path = output_path or f"./preprocessed_data/preprocessed_{sent_emb_model}_{dataset}.pkl"
+	ensure_output_path_is_new(output_path, label="preprocessed dataset output file")
 
 	def load_tokenizer():
 		if tokenizer_type.startswith("bert-"):
@@ -92,9 +95,9 @@ def preprocess_data(sent_emb_model, dataset, tokenizer_type):
 				data_dict[datatype] = processed_data
 
 		
-		with open(f"./preprocessed_data/preprocessed_{sent_emb_model}_{dataset}.pkl", 'wb') as f:
-			pickle.dump(data_dict, f)
-		print(f'The tokenized data is saved at ./preprocessed_data/preprocessed_{sent_emb_model}_{dataset}.pkl')
+			with open(output_path, 'wb') as f:
+				pickle.dump(data_dict, f)
+			print(f'The tokenized data is saved at {output_path}')
 
 
 
@@ -165,9 +168,9 @@ def preprocess_data(sent_emb_model, dataset, tokenizer_type):
 				processed_data = pd.DataFrame.from_dict(processed_data)
 				data_dict[datatype] = processed_data
 
-		with open(f"./preprocessed_data/preprocessed_{sent_emb_model}_{dataset}.pkl", 'wb') as f:
-			pickle.dump(data_dict, f)
-		print(f'The tokenized data is saved at ./preprocessed_data/preprocessed_{sent_emb_model}_{dataset}.pkl')
+			with open(output_path, 'wb') as f:
+				pickle.dump(data_dict, f)
+			print(f'The tokenized data is saved at {output_path}')
 
 
 
@@ -240,9 +243,9 @@ def preprocess_data(sent_emb_model, dataset, tokenizer_type):
 				processed_data = pd.DataFrame.from_dict(processed_data)
 				data_dict[datatype] = processed_data
 
-		with open(f"./preprocessed_data/preprocessed_{sent_emb_model}_{dataset}.pkl", 'wb') as f:
-			pickle.dump(data_dict, f)
-		print(f'The tokenized data is saved at ./preprocessed_data/preprocessed_{sent_emb_model}_{dataset}.pkl')
+			with open(output_path, 'wb') as f:
+				pickle.dump(data_dict, f)
+			print(f'The tokenized data is saved at {output_path}')
 
 
 	else:
@@ -256,6 +259,7 @@ if __name__ == '__main__':
 	parser.add_argument('-m', default="simcse", type=str, help='Enter sentence embedding model')
 	parser.add_argument('-d', default="ihc_pure_c10",type=str, help='Enter dataset')
 	parser.add_argument('-t', default="bert-base-uncased",type=str, help='Enter tokenizer type')
+	parser.add_argument('-o', '--output', default=None, type=str, help='Optional explicit output pickle path. Refuses to overwrite existing files.')
 	args = parser.parse_args()
 
-	preprocess_data(args.m, args.d, args.t)
+	preprocess_data(args.m, args.d, args.t, output_path=args.output)

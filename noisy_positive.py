@@ -8,6 +8,7 @@ from simcse import SimCSE
 from sklearn.cluster import KMeans
 from sklearn.metrics import pairwise_distances_argmin_min, pairwise_distances
 
+from util import ensure_output_dir_is_new
 
 np.random.seed(0)
 random.seed(0)
@@ -134,10 +135,12 @@ if __name__ == '__main__':
     
     
     # save the dataset
-    os.makedirs(f"dataset/forfig_ihc_c{args.cluster_num}", exist_ok=True)
-    total_train_dataset.to_csv(os.path.join(f"dataset/forfig_ihc_c{args.cluster_num}", "train.tsv"), sep="\t", index=False)
-    total_valid_dataset.to_csv(os.path.join(f"dataset/forfig_ihc_c{args.cluster_num}", "valid.tsv"), sep="\t", index=False)
-    total_test_dataset.to_csv(os.path.join(f"dataset/forfig_ihc_c{args.cluster_num}", "test.tsv"), sep="\t", index=False)
+    output_dir = f"dataset/forfig_ihc_c{args.cluster_num}"
+    ensure_output_dir_is_new(output_dir, label="noisy positive output directory")
+    os.makedirs(output_dir, exist_ok=False)
+    total_train_dataset.to_csv(os.path.join(output_dir, "train.tsv"), sep="\t", index=False)
+    total_valid_dataset.to_csv(os.path.join(output_dir, "valid.tsv"), sep="\t", index=False)
+    total_test_dataset.to_csv(os.path.join(output_dir, "test.tsv"), sep="\t", index=False)
     print(f"The processed dataset is saved at {os.path.join(f'dataset/ihc_c{args.cluster_num}', 'train.tsv')}")
     print(f"The processed dataset is saved at {os.path.join(f'dataset/ihc_c{args.cluster_num}', 'valid.tsv')}")
     print(f"The processed dataset is saved at {os.path.join(f'dataset/ihc_c{args.cluster_num}', 'test.tsv')}")

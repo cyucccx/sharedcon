@@ -3,6 +3,7 @@ import json
 import random
 import os
 import pickle
+import copy
 from easydict import EasyDict as edict
 import time
 
@@ -12,8 +13,8 @@ import torch.utils.data
 from torch import nn
 
 import eval_config as train_config
-from dataset_loader import get_dataloader, sbic_dataset
-from util import iter_product
+from dataset_loader import get_dataloader, resolve_preprocessed_path, sbic_dataset
+from util import build_versioned_output_path, get_run_tag, extract_run_version, iter_product, resolve_checkpoint_path
 from sklearn.metrics import f1_score
 
 from model import primary_encoder_v2_no_pooler_for_con
@@ -24,17 +25,39 @@ from tqdm import tqdm
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-def get_run_timestamp():
-    return time.strftime("%Y%m%d_%H%M%S", time.localtime())
+def write_versioned_json(save_dir, base_name, payload, run_tag, run_version):
+    dated_path = build_versioned_output_path(save_dir, base_name, run_tag, run_version=run_version)
+    with open(dated_path, "w") as fp:
+        json.dump(payload, fp, indent=4)
+    return dated_path
 
 
-def write_json_with_timestamp(save_dir, base_name, payload, run_timestamp):
-    canonical_path = os.path.join(save_dir, base_name)
-    dated_path = os.path.join(save_dir, f"{os.path.splitext(base_name)[0]}_{run_timestamp}.json")
-    with open(canonical_path, 'w') as fp:
-        json.dump(payload, fp, indent=4)
-    with open(dated_path, 'w') as fp:
-        json.dump(payload, fp, indent=4)
+def resolve_model_path(load_dir, configured_model_filename=None):
+    env_model_filename = os.environ.get("MODEL_FILENAME")
+    preferred_filename = env_model_filename or configured_model_filename
+    return resolve_checkpoint_path(load_dir, preferred_filename=preferred_filename)
+
+
+def apply_eval_env_overrides(param):
+    overridden = copy.deepcopy(param)
+
+    env_datasets = os.environ.get("EVAL_DATASETS")
+    if env_datasets:
+        overridden["dataset"] = [item.strip() for item in env_datasets.split(",") if item.strip()]
+
+    env_load_dir = os.environ.get("EVAL_LOAD_DIR")
+    if env_load_dir:
+        overridden["load_dir"] = [env_load_dir]
+
+    env_model_filename = os.environ.get("EVAL_MODEL_FILENAME")
+    if env_model_filename:
+        overridden["model_filename"] = [env_model_filename]
+
+    return overridden
+
+
+def is_cold_eval_dataset(dataset_name):
+    return dataset_name == "cold" or dataset_name.startswith("cold_")
 
 # Credits https://github.com/varsha33/LCL_loss
 def test(test_loader,model_main,log):
@@ -110,7 +133,7 @@ def test(test_loader,model_main,log):
 
 
 def build_cold_train_inference_loader(log):
-    preprocessed_path = os.path.join("preprocessed_data", f"preprocessed_{log.param.dataset}.pkl")
+    preprocessed_path = resolve_preprocessed_path(log.param.dataset)
     with open(preprocessed_path, "rb") as f:
         data = pickle.load(f)
 
@@ -132,7 +155,7 @@ def build_cold_train_inference_loader(log):
     return train_loader, train_posts
 
 
-def save_prediction_csv(output_path, posts, save_pred, run_timestamp=None):
+def save_prediction_csv(output_dir, base_name, posts, save_pred, run_tag=None, run_version=None):
     pred_probs = np.array(save_pred["pred_prob_1"])
     pred_frame = {
         "row_id": list(range(len(save_pred["pred_1"]))),
@@ -146,10 +169,9 @@ def save_prediction_csv(output_path, posts, save_pred, run_timestamp=None):
         pred_frame[f"prob_{label_idx}"] = pred_probs[:, label_idx].tolist()
 
     pred_df = pd.DataFrame(pred_frame)
+    output_path = build_versioned_output_path(output_dir, base_name, run_tag, run_version=run_version)
     pred_df.to_csv(output_path, index=False)
-    if run_timestamp is not None:
-        dated_output_path = output_path.replace(".csv", f"_{run_timestamp}.csv")
-        pred_df.to_csv(dated_output_path, index=False)
+    return output_path
 
 ##################################################################################################
 def cl_test(log):
@@ -163,7 +185,7 @@ def cl_test(log):
     torch.backends.cudnn.deterministic = True #
     torch.backends.cudnn.benchmark = False #
 
-    run_timestamp = get_run_timestamp()
+    run_tag = get_run_tag()
 
     print("#######################start run#######################")
     print("log:", log)
@@ -175,8 +197,15 @@ def cl_test(log):
     
     #################################################################
     # load model
-    model_main.load_state_dict(torch.load(os.path.join(log.param.load_dir, "model.pt"), map_location=device))
-    print(f"model is loaded from {log.param.load_dir}")
+    model_path = resolve_model_path(
+        log.param.load_dir,
+        configured_model_filename=getattr(log.param, "model_filename", None),
+    )
+    run_version = extract_run_version(os.path.basename(model_path))
+    if run_version is None:
+        raise ValueError(f"Could not infer run version from checkpoint name: {model_path}")
+    model_main.load_state_dict(torch.load(model_path, map_location=device))
+    print(f"model is loaded from {model_path}")
     
     model_main.eval()
     model_main.to(device)
@@ -185,11 +214,17 @@ def cl_test(log):
     val_acc_1,val_f1_1,val_save_pred = test(valid_data,model_main,log)
     test_acc_1,test_f1_1,test_save_pred = test(test_data,model_main,log)
 
-    if "cold" in log.param.dataset:
+    if is_cold_eval_dataset(log.param.dataset):
         train_data, train_posts = build_cold_train_inference_loader(log)
         train_acc_1, train_f1_1, train_save_pred = test(train_data, model_main, log)
-        train_pred_path = os.path.join(log.param.load_dir, f"{log.param.dataset}_train_predictions.csv")
-        save_prediction_csv(train_pred_path, train_posts, train_save_pred, run_timestamp=run_timestamp)
+        train_pred_path = save_prediction_csv(
+            log.param.load_dir,
+            f"{log.param.dataset}_train_predictions.csv",
+            train_posts,
+            train_save_pred,
+            run_tag=run_tag,
+            run_version=run_version,
+        )
         print(f"Train Accuracy: {train_acc_1:.2f} Train F1: {train_f1_1['macro']:.2f}")
         print(f"Train predictions are saved to {train_pred_path}")
         log.train_accuracy_1 = train_acc_1
@@ -206,30 +241,32 @@ def cl_test(log):
     log.test_accuracy_1 = test_acc_1
 
     if log.param.dataset == "dynahate":
-        write_json_with_timestamp(log.param.load_dir, "dynahate_test_log.json", dict(log), run_timestamp)
+        log_path = write_versioned_json(log.param.load_dir, "dynahate_test_log.json", dict(log), run_tag, run_version)
     elif log.param.dataset == "sbic":
-        write_json_with_timestamp(log.param.load_dir, "sbic_test_log.json", dict(log), run_timestamp)
+        log_path = write_versioned_json(log.param.load_dir, "sbic_test_log.json", dict(log), run_tag, run_version)
     elif "ihc" in log.param.dataset:
-        write_json_with_timestamp(log.param.load_dir, "ihc_test_log.json", dict(log), run_timestamp)
+        log_path = write_versioned_json(log.param.load_dir, "ihc_test_log.json", dict(log), run_tag, run_version)
     elif log.param.dataset == "sbic_hate":
-        write_json_with_timestamp(log.param.load_dir, "sbic_hate_test_log.json", dict(log), run_timestamp)
-    elif "cold" in log.param.dataset:
-        write_json_with_timestamp(log.param.load_dir, "cold_test_log.json", dict(log), run_timestamp)
+        log_path = write_versioned_json(log.param.load_dir, "sbic_hate_test_log.json", dict(log), run_tag, run_version)
+    elif is_cold_eval_dataset(log.param.dataset):
+        log_path = write_versioned_json(log.param.load_dir, "cold_test_log.json", dict(log), run_tag, run_version)
     else:
         raise NotImplementedError
+    print(f"evaluation log is saved at {log_path}")
 
 
 if __name__ == '__main__':
 
     tuning_param = train_config.tuning_param
+    effective_param = apply_eval_env_overrides(train_config.param)
 
-    param_list = [train_config.param[i] for i in tuning_param]
+    param_list = [effective_param[i] for i in tuning_param]
     param_list = [tuple(tuning_param)] + list(iter_product(*param_list)) ## [(param_name),(param combinations)]
 
     for param_com in param_list[1:]: # as first element is just name
 
         log = edict()
-        log.param = train_config.param
+        log.param = copy.deepcopy(effective_param)
 
         for num,val in enumerate(param_com):
             log.param[param_list[0][num]] = val

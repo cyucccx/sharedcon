@@ -1,8 +1,9 @@
-tuning_param  = ["dataset", "load_dir"]
-dataset = ["sbert-multi_ihc_pure_c10"]  # dataset for evaluation
+tuning_param  = ["dataset", "load_dir", "model_filename"]
+dataset = ["sbert-multi_ihc_pure_c10", "cold"]  # datasets for evaluation
 
 # saved model location (folder containing model.pt from your training run)
-load_dir = ["./save/sbert-multi/sbert-multi_ihc_pure_cold_pseudo_c10/0"]
+load_dir = ["./save/sbert-multi/sbert-multi_ihc_pure_c10/0"]
+model_filename = [""]
 
 train_batch_size = 8
 eval_batch_size = 8
@@ -10,4 +11,4 @@ hidden_size = 768
 model_type = "bert-base-multilingual-cased"
 SEED = 0
 
-param = {"dataset":dataset,"train_batch_size":train_batch_size,"eval_batch_size":eval_batch_size,"hidden_size":hidden_size,"dataset":dataset,"SEED":SEED,"model_type":model_type, "load_dir":load_dir}
+param = {"dataset":dataset,"train_batch_size":train_batch_size,"eval_batch_size":eval_batch_size,"hidden_size":hidden_size,"dataset":dataset,"SEED":SEED,"model_type":model_type, "load_dir":load_dir, "model_filename":model_filename}

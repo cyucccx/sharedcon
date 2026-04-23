@@ -1,9 +1,11 @@
+import os
 import pickle
 
 import torch
 import torch.utils.data
 from torch.utils.data import Dataset
 
+from util import build_versioned_output_path, get_run_tag
 from collate_fns_sharedcon import (
     collate_fn_ihc,
     collate_fn_w_aug_ihc_imp_con,
@@ -12,6 +14,30 @@ from collate_fns_sharedcon import (
     collate_fn_w_aug_sbic_imp_con,
     collate_fn_w_aug_dynahate_imp_con,
 )
+
+
+def resolve_preprocessed_path(dataset):
+    env_override = os.environ.get("PREPROCESSED_DATA_PATH")
+    candidate_paths = []
+    if env_override:
+        candidate_paths.append(env_override)
+
+    candidate_paths.extend(
+        [
+            os.path.join("preprocessed_data", f"preprocessed_{dataset}.pkl"),
+            os.path.join("preprocessed_data", f"preprocessed_sbert-multi_{dataset}.pkl"),
+            os.path.join("preprocessed_data", f"preprocessed_simcse_{dataset}.pkl"),
+        ]
+    )
+
+    for candidate_path in candidate_paths:
+        if os.path.isfile(candidate_path):
+            return candidate_path
+
+    raise FileNotFoundError(
+        f"No preprocessed dataset found for {dataset}. Tried: {candidate_paths}"
+    )
+
 
 # Credits https://github.com/varsha33/LCL_loss
 class ihc_dataset(Dataset):
@@ -44,8 +70,10 @@ class ihc_dataset(Dataset):
             return len(self.data["label"])
         except KeyError:
             print(self.data)
-            with open("key_error.pickle", 'wb') as f:
+            error_path = build_versioned_output_path(".", "key_error.pickle", get_run_tag())
+            with open(error_path, 'wb') as f:
                 pickle.dump(self.data, f)
+            print(f"Saved debug payload to {error_path}")
             
 
         
@@ -105,7 +133,8 @@ class sbic_dataset(Dataset):
 
 def get_dataloader(train_batch_size,eval_batch_size,dataset,seed=None,w_aug=True,w_double=False,label_list=None):
 
-    with open('./preprocessed_data/'+'preprocessed_'+dataset+'.pkl', "rb") as f:
+    preprocessed_path = resolve_preprocessed_path(dataset)
+    with open(preprocessed_path, "rb") as f:
 
         data = pickle.load(f)
 

@@ -7,6 +7,7 @@ import warnings
 
 import pandas as pd
 
+from util import ensure_output_dir_is_new
 
 LABEL_MAP = {
     0: "not_hate",
@@ -39,7 +40,7 @@ def parse_args():
     )
     parser.add_argument(
         "--pseudo_predictions",
-        default="pseudo_clusters/sbert-multi_cold_conf099_k50/selected_cluster_samples.csv",
+        default="pseudo_clusters/sbert-multi_cold_conf099_global_k50_aligned/selected_cluster_samples.csv",
         type=str,
         help="Path to eval.py output CSV containing pseudo predictions.",
     )
@@ -134,6 +135,38 @@ def build_pseudo_rows(pseudo_df, train_columns):
     pseudo_rows["is_pseudo"] = 1
     pseudo_rows["pseudo_confidence"] = pseudo_df["confidence"].tolist()
     pseudo_rows["pseudo_pred_label"] = pseudo_df["pred_label"].astype(int).tolist()
+    if "cluster" in pseudo_df.columns:
+        pseudo_rows["pseudo_source_cluster"] = pseudo_df["cluster"].astype(int).tolist()
+    else:
+        pseudo_rows["pseudo_source_cluster"] = pd.NA
+    if "cluster_size" in pseudo_df.columns:
+        pseudo_rows["pseudo_source_cluster_size"] = pseudo_df["cluster_size"].tolist()
+    else:
+        pseudo_rows["pseudo_source_cluster_size"] = pd.NA
+    if "majority_ratio" in pseudo_df.columns:
+        pseudo_rows["pseudo_source_cluster_majority_ratio"] = pseudo_df["majority_ratio"].tolist()
+    else:
+        pseudo_rows["pseudo_source_cluster_majority_ratio"] = pd.NA
+    if "aligned_target_cluster" in pseudo_df.columns:
+        pseudo_rows["aligned_target_cluster"] = pseudo_df["aligned_target_cluster"].tolist()
+    else:
+        pseudo_rows["aligned_target_cluster"] = pd.NA
+    if "aligned_centroid_sample" in pseudo_df.columns:
+        pseudo_rows["aligned_centroid_sample"] = pseudo_df["aligned_centroid_sample"].tolist()
+    else:
+        pseudo_rows["aligned_centroid_sample"] = pd.NA
+    if "aligned_similarity" in pseudo_df.columns:
+        pseudo_rows["aligned_similarity"] = pseudo_df["aligned_similarity"].tolist()
+    else:
+        pseudo_rows["aligned_similarity"] = pd.NA
+    if "aligned_base_class_name" in pseudo_df.columns:
+        pseudo_rows["aligned_base_class_name"] = pseudo_df["aligned_base_class_name"].tolist()
+    else:
+        pseudo_rows["aligned_base_class_name"] = pd.NA
+    if "class_ratio_gap" in pseudo_df.columns:
+        pseudo_rows["class_ratio_gap"] = pseudo_df["class_ratio_gap"].tolist()
+    else:
+        pseudo_rows["class_ratio_gap"] = pd.NA
     if "true_label" in pseudo_df.columns:
         pseudo_rows["cold_true_label"] = pseudo_df["true_label"].tolist()
 
@@ -198,6 +231,14 @@ def main():
     kept_train["is_pseudo"] = 0
     kept_train["pseudo_confidence"] = pd.NA
     kept_train["pseudo_pred_label"] = pd.NA
+    kept_train["pseudo_source_cluster"] = pd.NA
+    kept_train["pseudo_source_cluster_size"] = pd.NA
+    kept_train["pseudo_source_cluster_majority_ratio"] = pd.NA
+    kept_train["aligned_target_cluster"] = pd.NA
+    kept_train["aligned_centroid_sample"] = pd.NA
+    kept_train["aligned_similarity"] = pd.NA
+    kept_train["aligned_base_class_name"] = pd.NA
+    kept_train["class_ratio_gap"] = pd.NA
     kept_train["cold_true_label"] = pd.NA
 
     with warnings.catch_warnings():
@@ -207,7 +248,8 @@ def main():
 
     assert len(new_train) == len(train_df)
 
-    os.makedirs(args.output_dir, exist_ok=True)
+    ensure_output_dir_is_new(args.output_dir, label="mixed raw dataset output directory")
+    os.makedirs(args.output_dir, exist_ok=False)
     train_out = os.path.join(args.output_dir, "train.tsv")
     valid_out = os.path.join(args.output_dir, "valid.tsv")
     test_out = os.path.join(args.output_dir, "test.tsv")
