@@ -1,0 +1,29 @@
+{
+    "param": {
+        "dataset": "cold_no_pseudo_260423_v2",
+        "train_batch_size": 8,
+        "eval_batch_size": 8,
+        "hidden_size": 768,
+        "SEED": 0,
+        "model_type": "bert-base-multilingual-cased",
+        "load_dir": "save/sbert-multi/ihc_pure_cold_pseudo_260423_v2_c10/0",
+        "model_filename": "model_260423_v2.pt",
+        "label_size": 2
+    },
+    "train_accuracy_1": 52.18118001002841,
+    "train_f1_score_1": {
+        "macro": 0.47245792257737595,
+        "weighted": 0.457256209118134
+    },
+    "train_prediction_path": "save/sbert-multi/ihc_pure_cold_pseudo_260423_v2_c10/0/cold_no_pseudo_260423_v2_train_predictions_260423_v2.csv",
+    "valid_f1_score_1": {
+        "macro": 0.49057453310544663,
+        "weighted": 0.49031501506330694
+    },
+    "test_f1_score_1": {
+        "macro": 0.42925472781284363,
+        "weighted": 0.39768992371295114
+    },
+    "valid_accuracy_1": 55.80780593997823,
+    "test_accuracy_1": 46.947210219800866
+}

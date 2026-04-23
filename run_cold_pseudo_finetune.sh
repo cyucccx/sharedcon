@@ -65,12 +65,34 @@ CLASS_RATIO_GAP_THRESHOLD="${CLASS_RATIO_GAP_THRESHOLD:-0.20}"
 SHARED_CLUSTER_NUM="${SHARED_CLUSTER_NUM:-10}"
 SENT_EMB_MODEL="${SENT_EMB_MODEL:-sbert-multi}"
 TOKENIZER_TYPE="${TOKENIZER_TYPE:-bert-base-multilingual-cased}"
-MIXED_RAW_DATASET_BASE="${MIXED_RAW_DATASET_BASE:-ihc_pure_cold_pseudo}"
-PSEUDO_OUTPUT_DIR_BASE="${PSEUDO_OUTPUT_DIR_BASE:-pseudo_clusters/sbert-multi_cold_conf099_global_k50_aligned}"
-FILTERED_COLD_DATASET_BASE="${FILTERED_COLD_DATASET_BASE:-cold_no_pseudo}"
+ITERATION_ROUND="${ITERATION_ROUND:-1}"
 RUN_EVAL="${RUN_EVAL:-1}"
 EVAL_MODEL_FILENAME="${EVAL_MODEL_FILENAME:-}"
-COLD_RAW_DATASET_DIR="raw_dataset/COLDataset"
+DEFAULT_BASELINE_SAVE_DIR="save/sbert-multi/sbert-multi_ihc_pure_c10/0"
+DEFAULT_BASELINE_COLD_DIR="raw_dataset/COLDataset"
+SOURCE_SAVE_DIR="${SOURCE_SAVE_DIR:-$DEFAULT_BASELINE_SAVE_DIR}"
+SOURCE_COLD_DATASET_DIR="${SOURCE_COLD_DATASET_DIR:-$DEFAULT_BASELINE_COLD_DIR}"
+SOURCE_COLD_DATASET_NAME="$(basename "$SOURCE_COLD_DATASET_DIR")"
+
+if [[ -z "${MIXED_RAW_DATASET_BASE:-}" ]]; then
+  MIXED_RAW_DATASET_BASE="ihc_pure_cold_pseudo"
+fi
+
+if [[ -z "${PSEUDO_OUTPUT_DIR_BASE:-}" ]]; then
+  PSEUDO_OUTPUT_DIR_BASE="pseudo_clusters/sbert-multi_cold_conf099_global_k50_aligned"
+fi
+
+if [[ -z "${FILTERED_COLD_DATASET_BASE:-}" ]]; then
+  FILTERED_COLD_DATASET_BASE="cold_no_pseudo"
+fi
+
+if [[ -z "${SOURCE_PREDICTION_PREFIX:-}" ]]; then
+  if [[ "$SOURCE_COLD_DATASET_NAME" == "COLDataset" ]]; then
+    SOURCE_PREDICTION_PREFIX="cold"
+  else
+    SOURCE_PREDICTION_PREFIX="$SOURCE_COLD_DATASET_NAME"
+  fi
+fi
 
 MIXED_RAW_DATASET="$(next_versioned_label "raw_dataset" "$MIXED_RAW_DATASET_BASE")"
 MIXED_CLUSTERED_DATASET="${MIXED_RAW_DATASET}_c${SHARED_CLUSTER_NUM}"
@@ -81,7 +103,7 @@ FILTERED_COLD_PREPROCESSED="preprocessed_data/preprocessed_${FILTERED_COLD_DATAS
 MIXED_PREPROCESSED_FILE="preprocessed_data/preprocessed_${SENT_EMB_MODEL}_${MIXED_CLUSTERED_DATASET}.pkl"
 FINETUNE_SAVE_DIR="save/sbert-multi/${MIXED_CLUSTERED_DATASET}/0"
 
-BASE_IHC_CHECKPOINT_DIR="save/sbert-multi/sbert-multi_ihc_pure_c10/0"
+BASE_IHC_CHECKPOINT_DIR="$SOURCE_SAVE_DIR"
 BASE_CLUSTERED_TRAIN="clustered_dataset/sbert-multi/ihc_pure_c10/train.tsv"
 BASE_RAW_TRAIN="raw_dataset/ihc_pure/train.tsv"
 BASE_RAW_VALID="raw_dataset/ihc_pure/valid.tsv"
@@ -98,14 +120,14 @@ if [[ -z "$BASE_IHC_CHECKPOINT" ]]; then
   exit 1
 fi
 
-if compgen -G "$BASE_IHC_CHECKPOINT_DIR/cold_train_predictions*.csv" > /dev/null; then
-  COLD_PREDICTIONS="$(ls -1t "$BASE_IHC_CHECKPOINT_DIR"/cold_train_predictions*.csv | head -n 1)"
+if compgen -G "$SOURCE_SAVE_DIR/${SOURCE_PREDICTION_PREFIX}_train_predictions*.csv" > /dev/null; then
+  COLD_PREDICTIONS="$(ls -1t "$SOURCE_SAVE_DIR"/"${SOURCE_PREDICTION_PREFIX}"_train_predictions*.csv | head -n 1)"
 else
   COLD_PREDICTIONS=""
 fi
 
 if [[ -z "$COLD_PREDICTIONS" ]]; then
-  echo "Missing required baseline COLD predictions under: $BASE_IHC_CHECKPOINT_DIR" >&2
+  echo "Missing required source COLD predictions under: $SOURCE_SAVE_DIR" >&2
   exit 1
 fi
 
@@ -114,11 +136,17 @@ echo "ROOT_DIR=$ROOT_DIR"
 echo "HF_LOCAL_FILES_ONLY=$HF_LOCAL_FILES_ONLY"
 echo "RUN_TAG=$RUN_TAG"
 echo "RUN_VERSION=$RUN_VERSION"
+echo "ITERATION_ROUND=$ITERATION_ROUND"
 echo "CONFIDENCE_THRESHOLD=$CONFIDENCE_THRESHOLD"
 echo "GLOBAL_CLUSTER_NUM=$GLOBAL_CLUSTER_NUM"
 echo "SHARED_CLUSTER_NUM=$SHARED_CLUSTER_NUM"
 echo "RUN_EVAL=$RUN_EVAL"
 echo "EVAL_MODEL_FILENAME=$EVAL_MODEL_FILENAME"
+echo "SOURCE_SAVE_DIR=$SOURCE_SAVE_DIR"
+echo "SOURCE_COLD_DATASET_DIR=$SOURCE_COLD_DATASET_DIR"
+echo "SOURCE_PREDICTION_PREFIX=$SOURCE_PREDICTION_PREFIX"
+echo "SOURCE_CHECKPOINT=$BASE_IHC_CHECKPOINT"
+echo "SOURCE_PREDICTIONS=$COLD_PREDICTIONS"
 echo "PSEUDO_OUTPUT_DIR=$PSEUDO_OUTPUT_DIR"
 echo "MIXED_RAW_DATASET=$MIXED_RAW_DATASET"
 echo "MIXED_CLUSTERED_DATASET=$MIXED_CLUSTERED_DATASET"
@@ -172,7 +200,7 @@ python build_pseudo_train_dataset.py \
 echo
 echo "[3/6] Remove selected pseudo rows from future COLD evaluation data"
 python prepare_cold_eval.py \
-  --input_dir "$COLD_RAW_DATASET_DIR" \
+  --input_dir "$SOURCE_COLD_DATASET_DIR" \
   --exclude_samples "$SELECTED_PSEUDO_CSV" \
   --filtered_output_dir "$FILTERED_COLD_DATASET_DIR" \
   --output "$FILTERED_COLD_PREPROCESSED" \
@@ -235,6 +263,8 @@ fi
 echo
 echo "================ PIPELINE DONE ================"
 echo "Pseudo selection output: $PSEUDO_OUTPUT_DIR"
+echo "Source save dir: $SOURCE_SAVE_DIR"
+echo "Source COLD dataset: $SOURCE_COLD_DATASET_DIR"
 echo "Mixed raw dataset: raw_dataset/$MIXED_RAW_DATASET"
 echo "Filtered COLD raw dataset: $FILTERED_COLD_DATASET_DIR"
 echo "Mixed clustered dataset: clustered_dataset/$SENT_EMB_MODEL/$MIXED_CLUSTERED_DATASET"
