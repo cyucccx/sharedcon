@@ -64,9 +64,20 @@ def parse_args():
     )
     parser.add_argument(
         "--remove_strategy",
-        choices=["random", "label_matched_random"],
-        default="label_matched_random",
+        choices=["random", "label_matched_random", "cluster_matched_random"],
+        default="cluster_matched_random",
         help="How to remove original IHC samples to keep train size unchanged.",
+    )
+    parser.add_argument(
+        "--base_clustered_train",
+        default="clustered_dataset/sbert-multi/ihc_pure_c10/train.tsv",
+        type=str,
+        help="Clustered IHC train.tsv used to remove original IHC rows from the pseudo-aligned cluster.",
+    )
+    parser.add_argument(
+        "--cumulative",
+        action="store_true",
+        help="Keep existing pseudo rows in --ihc_train and only remove non-pseudo rows when adding new pseudo samples.",
     )
     parser.add_argument(
         "--seed",
@@ -87,25 +98,64 @@ def select_pseudo_samples(predictions, threshold, max_pseudo_samples):
     return pseudo
 
 
-def fit_pseudo_samples_to_train_capacity(pseudo_df, train_df, remove_strategy):
-    if remove_strategy != "label_matched_random" or len(pseudo_df) == 0:
+def load_base_cluster_by_id(base_clustered_train):
+    base_df = pd.read_csv(base_clustered_train, sep="\t", usecols=["ID", "cluster"])
+    if base_df["ID"].astype(str).duplicated().any():
+        raise ValueError(f"Duplicate ID found in base clustered train: {base_clustered_train}")
+    return dict(zip(base_df["ID"].astype(str), base_df["cluster"].astype(int)))
+
+
+def attach_removal_clusters(train_df, base_cluster_by_id, removable_mask):
+    removal_clusters = pd.Series(pd.NA, index=train_df.index, dtype="Int64")
+    removable_ids = train_df.loc[removable_mask, "ID"].astype(str)
+    mapped_clusters = removable_ids.map(base_cluster_by_id)
+    if mapped_clusters.isna().any():
+        missing_ids = removable_ids.loc[mapped_clusters.isna()].head(5).tolist()
+        raise ValueError(
+            "Missing base IHC cluster labels for removable rows. "
+            f"Example IDs: {missing_ids}"
+        )
+    removal_clusters.loc[removable_mask] = mapped_clusters.astype(int).to_numpy()
+    return removal_clusters
+
+
+def fit_pseudo_samples_to_train_capacity(
+    pseudo_df,
+    train_df,
+    remove_strategy,
+    removable_train_df=None,
+    removable_clusters=None,
+):
+    if remove_strategy not in {"label_matched_random", "cluster_matched_random"} or len(pseudo_df) == 0:
         return pseudo_df
 
     pseudo = pseudo_df.copy()
-    pseudo["target_class"] = pseudo["pred_label"].astype(int).map(LABEL_MAP)
+    capacity_df = removable_train_df if removable_train_df is not None else train_df
+
+    if remove_strategy == "label_matched_random":
+        pseudo["target_class"] = pseudo["pred_label"].astype(int).map(LABEL_MAP)
+        train_capacity = capacity_df["class"].value_counts().to_dict()
+        group_column = "target_class"
+    else:
+        if "aligned_target_cluster" not in pseudo.columns:
+            raise ValueError("cluster_matched_random requires aligned_target_cluster in pseudo predictions.")
+        if removable_clusters is None:
+            raise ValueError("cluster_matched_random requires removable IHC cluster labels.")
+        pseudo["target_cluster"] = pseudo["aligned_target_cluster"].astype(int)
+        train_capacity = removable_clusters.dropna().astype(int).value_counts().to_dict()
+        group_column = "target_cluster"
 
     capped_parts = []
-    train_capacity = train_df["class"].value_counts().to_dict()
-    for class_name, capacity in train_capacity.items():
-        class_pseudo = pseudo.loc[pseudo["target_class"] == class_name].copy()
-        class_pseudo = class_pseudo.sort_values("confidence", ascending=False).reset_index(drop=True)
-        capped_parts.append(class_pseudo.iloc[:capacity].copy())
+    for group_value, capacity in train_capacity.items():
+        group_pseudo = pseudo.loc[pseudo[group_column] == group_value].copy()
+        group_pseudo = group_pseudo.sort_values("confidence", ascending=False).reset_index(drop=True)
+        capped_parts.append(group_pseudo.iloc[:capacity].copy())
 
     if not capped_parts:
         return pseudo_df.iloc[0:0].copy()
 
     pseudo = pd.concat(capped_parts, ignore_index=True)
-    pseudo = pseudo.drop(columns=["target_class"])
+    pseudo = pseudo.drop(columns=[column for column in ["target_class", "target_cluster"] if column in pseudo.columns])
     pseudo = pseudo.sort_values("confidence", ascending=False).reset_index(drop=True)
     return pseudo
 
@@ -173,20 +223,48 @@ def build_pseudo_rows(pseudo_df, train_columns):
     return pseudo_rows
 
 
-def sample_rows_to_remove(train_df, pseudo_rows, strategy, seed):
+def sample_rows_to_remove(train_df, pseudo_rows, strategy, seed, removable_mask=None, removal_clusters=None):
     if len(pseudo_rows) == 0:
         return train_df.iloc[0:0].copy()
 
+    removable_df = train_df.loc[removable_mask].copy() if removable_mask is not None else train_df
+
     if strategy == "random":
-        return train_df.sample(n=len(pseudo_rows), random_state=seed).copy()
+        if len(removable_df) < len(pseudo_rows):
+            raise ValueError(
+                f"Not enough removable samples to remove {len(pseudo_rows)} rows. "
+                f"Only found {len(removable_df)}."
+        )
+        return removable_df.sample(n=len(pseudo_rows), random_state=seed).copy()
+
+    if strategy == "cluster_matched_random":
+        if "aligned_target_cluster" not in pseudo_rows.columns:
+            raise ValueError("cluster_matched_random requires aligned_target_cluster in pseudo rows.")
+        if removal_clusters is None:
+            raise ValueError("cluster_matched_random requires removal_clusters.")
+
+        removable_df = removable_df.copy()
+        removable_df["_removal_cluster"] = removal_clusters.loc[removable_df.index].astype(int)
+        to_remove_parts = []
+        pseudo_counts = pseudo_rows["aligned_target_cluster"].astype(int).value_counts().to_dict()
+        for cluster_id, count in pseudo_counts.items():
+            cluster_rows = removable_df.loc[removable_df["_removal_cluster"] == int(cluster_id)]
+            if len(cluster_rows) < count:
+                raise ValueError(
+                    f"Not enough removable IHC samples in cluster={cluster_id} to remove {count} rows. "
+                    f"Only found {len(cluster_rows)}."
+                )
+            sampled = cluster_rows.sample(n=count, random_state=seed).copy()
+            to_remove_parts.append(sampled.drop(columns=["_removal_cluster"]))
+        return pd.concat(to_remove_parts, ignore_index=False)
 
     to_remove_parts = []
     pseudo_counts = pseudo_rows["class"].value_counts().to_dict()
     for class_name, count in pseudo_counts.items():
-        class_rows = train_df.loc[train_df["class"] == class_name]
+        class_rows = removable_df.loc[removable_df["class"] == class_name]
         if len(class_rows) < count:
             raise ValueError(
-                f"Not enough IHC samples in class={class_name} to remove {count} rows. "
+                f"Not enough removable IHC samples in class={class_name} to remove {count} rows. "
                 f"Only found {len(class_rows)}."
             )
         sampled = class_rows.sample(n=count, random_state=seed).copy()
@@ -201,6 +279,18 @@ def main():
 
     train_df = pd.read_csv(args.ihc_train, sep="\t")
     predictions = pd.read_csv(args.pseudo_predictions)
+    existing_pseudo_mask = (
+        train_df["is_pseudo"].fillna(0).astype(int).eq(1)
+        if args.cumulative and "is_pseudo" in train_df.columns
+        else pd.Series(False, index=train_df.index)
+    )
+    removable_mask = ~existing_pseudo_mask
+    removable_train_df = train_df.loc[removable_mask].copy()
+    base_cluster_by_id = None
+    removal_clusters = None
+    if args.remove_strategy == "cluster_matched_random":
+        base_cluster_by_id = load_base_cluster_by_id(args.base_clustered_train)
+        removal_clusters = attach_removal_clusters(train_df, base_cluster_by_id, removable_mask)
 
     raw_pseudo_candidates = select_pseudo_samples(
         predictions,
@@ -211,6 +301,8 @@ def main():
         raw_pseudo_candidates,
         train_df,
         remove_strategy=args.remove_strategy,
+        removable_train_df=removable_train_df,
+        removable_clusters=removal_clusters.loc[removable_mask] if removal_clusters is not None else None,
     )
     pseudo_rows = build_pseudo_rows(pseudo_candidates, train_df.columns.tolist())
 
@@ -225,21 +317,34 @@ def main():
         pseudo_rows,
         strategy=args.remove_strategy,
         seed=args.seed,
+        removable_mask=removable_mask,
+        removal_clusters=removal_clusters,
     )
     kept_train = train_df.drop(index=removed_rows.index).copy()
 
-    kept_train["is_pseudo"] = 0
-    kept_train["pseudo_confidence"] = pd.NA
-    kept_train["pseudo_pred_label"] = pd.NA
-    kept_train["pseudo_source_cluster"] = pd.NA
-    kept_train["pseudo_source_cluster_size"] = pd.NA
-    kept_train["pseudo_source_cluster_majority_ratio"] = pd.NA
-    kept_train["aligned_target_cluster"] = pd.NA
-    kept_train["aligned_centroid_sample"] = pd.NA
-    kept_train["aligned_similarity"] = pd.NA
-    kept_train["aligned_base_class_name"] = pd.NA
-    kept_train["class_ratio_gap"] = pd.NA
-    kept_train["cold_true_label"] = pd.NA
+    new_metadata_columns = {
+        "is_pseudo": 0,
+        "pseudo_confidence": pd.NA,
+        "pseudo_pred_label": pd.NA,
+        "pseudo_source_cluster": pd.NA,
+        "pseudo_source_cluster_size": pd.NA,
+        "pseudo_source_cluster_majority_ratio": pd.NA,
+        "aligned_target_cluster": pd.NA,
+        "aligned_centroid_sample": pd.NA,
+        "aligned_similarity": pd.NA,
+        "aligned_base_class_name": pd.NA,
+        "class_ratio_gap": pd.NA,
+        "cold_true_label": pd.NA,
+    }
+    for column, default_value in new_metadata_columns.items():
+        if column not in kept_train.columns:
+            kept_train[column] = default_value
+    non_pseudo_mask = kept_train["is_pseudo"].fillna(0).astype(int).ne(1)
+    for column, default_value in new_metadata_columns.items():
+        if column == "is_pseudo":
+            kept_train.loc[non_pseudo_mask, column] = 0
+        else:
+            kept_train.loc[non_pseudo_mask, column] = default_value
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", FutureWarning)
@@ -263,18 +368,32 @@ def main():
 
     metadata = {
         "ihc_train_path": args.ihc_train,
+        "base_clustered_train": args.base_clustered_train if args.remove_strategy == "cluster_matched_random" else None,
         "pseudo_predictions_path": args.pseudo_predictions,
         "confidence_threshold": args.confidence_threshold,
         "max_pseudo_samples": args.max_pseudo_samples,
         "remove_strategy": args.remove_strategy,
         "seed": args.seed,
+        "cumulative": args.cumulative,
         "original_train_size": len(train_df),
+        "existing_pseudo_samples_before_injection": int(existing_pseudo_mask.sum()),
+        "removable_train_size": len(removable_train_df),
         "raw_selected_pseudo_samples_before_capacity_fit": len(raw_pseudo_candidates),
         "selected_pseudo_samples": len(pseudo_rows),
         "removed_ihc_samples": len(removed_rows),
         "new_train_size": len(new_train),
         "selected_pseudo_class_distribution": pseudo_rows["class"].value_counts().to_dict(),
         "removed_ihc_class_distribution": removed_rows["class"].value_counts().to_dict(),
+        "selected_pseudo_aligned_cluster_distribution": (
+            pseudo_rows["aligned_target_cluster"].astype(int).value_counts().sort_index().to_dict()
+            if args.remove_strategy == "cluster_matched_random" and len(pseudo_rows) > 0
+            else {}
+        ),
+        "removed_ihc_cluster_distribution": (
+            removal_clusters.loc[removed_rows.index].astype(int).value_counts().sort_index().to_dict()
+            if args.remove_strategy == "cluster_matched_random" and len(removed_rows) > 0
+            else {}
+        ),
     }
 
     with open(meta_out, "w") as f:

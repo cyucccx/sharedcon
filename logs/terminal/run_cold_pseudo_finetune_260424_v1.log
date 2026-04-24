@@ -1,0 +1,271 @@
+Terminal log: logs/terminal/run_cold_pseudo_finetune_260424_v1.log
+================ PIPELINE START ================
+ROOT_DIR=/Users/cyucccx/Desktop/Project/sharedcon_multilangual_zh_pseudo_label
+HF_LOCAL_FILES_ONLY=1
+RUN_TAG=260424
+RUN_VERSION=1
+ITERATION_ROUND=1
+CONFIDENCE_THRESHOLD=0.995
+MAX_PSEUDO_SAMPLES=1500
+REMOVE_STRATEGY=cluster_matched_random
+GLOBAL_CLUSTER_NUM=50
+SHARED_CLUSTER_NUM=10
+RUN_EVAL=1
+EVAL_IHC_DATASET=ihc_pure_c10
+EVAL_MODEL_FILENAME=
+SOURCE_SAVE_DIR=save/sbert-multi/sbert-multi_ihc_pure_c10/0
+SOURCE_COLD_DATASET_DIR=raw_dataset/COLDataset
+SOURCE_MIXED_RAW_DATASET_DIR=
+SOURCE_PREDICTION_PREFIX=cold
+SOURCE_CHECKPOINT=save/sbert-multi/sbert-multi_ihc_pure_c10/0/model_260421_v0.pt
+SOURCE_PREDICTIONS=save/sbert-multi/sbert-multi_ihc_pure_c10/0/cold_train_predictions_260422_v0.csv
+PSEUDO_OUTPUT_DIR=pseudo_clusters/sbert-multi_cold_conf995_global_k50_aligned_260424_v1
+MIXED_RAW_DATASET=ihc_pure_cold_pseudo_260424_v1
+MIXED_CLUSTERED_DATASET=ihc_pure_cold_pseudo_260424_v1_c10
+FILTERED_COLD_DATASET_DIR=raw_dataset/cold_no_pseudo_260424_v1
+MIXED_PREPROCESSED_FILE=preprocessed_data/preprocessed_sbert-multi_ihc_pure_cold_pseudo_260424_v1_c10.pkl
+
+[1/6] Select high-confidence pseudo clusters and align to IHC clusters
+/opt/homebrew/Caskroom/miniconda/base/envs/sharedcon/lib/python3.11/site-packages/bitsandbytes/cextension.py:34: UserWarning: The installed version of bitsandbytes was compiled without GPU support. 8-bit optimizers, 8-bit multiplication, and GPU quantization are unavailable.
+  warn("The installed version of bitsandbytes was compiled without GPU support. "
+'NoneType' object has no attribute 'cadam32bit_grad_fp32'
+LOAD_SENT_EMB_MODEL: sbert-multi
+INFO:sentence_transformers.SentenceTransformer:Use pytorch device_name: mps
+INFO:sentence_transformers.SentenceTransformer:Load pretrained SentenceTransformer: sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+Batches:   0%|          | 0/516 [00:00<?, ?it/s]Batches:   0%|          | 1/516 [00:00<02:48,  3.05it/s]Batches:   0%|          | 2/516 [00:00<02:07,  4.04it/s]Batches:   1%|          | 3/516 [00:00<01:47,  4.76it/s]Batches:   1%|          | 4/516 [00:00<01:35,  5.34it/s]Batches:   1%|          | 5/516 [00:00<01:28,  5.75it/s]Batches:   1%|          | 6/516 [00:01<01:25,  5.95it/s]Batches:   1%|▏         | 7/516 [00:01<01:22,  6.18it/s]Batches:   2%|▏         | 8/516 [00:01<01:13,  6.87it/s]Batches:   2%|▏         | 9/516 [00:01<01:14,  6.76it/s]Batches:   2%|▏         | 10/516 [00:01<01:14,  6.82it/s]Batches:   2%|▏         | 11/516 [00:01<01:07,  7.45it/s]Batches:   2%|▏         | 12/516 [00:01<01:13,  6.85it/s]Batches:   3%|▎         | 13/516 [00:02<01:13,  6.81it/s]Batches:   3%|▎         | 14/516 [00:02<01:13,  6.87it/s]Batches:   3%|▎         | 15/516 [00:02<01:17,  6.46it/s]Batches:   3%|▎         | 16/516 [00:02<01:19,  6.27it/s]Batches:   3%|▎         | 17/516 [00:02<01:17,  6.41it/s]Batches:   3%|▎         | 18/516 [00:02<01:10,  7.02it/s]Batches:   4%|▎         | 19/516 [00:03<01:08,  7.21it/s]Batches:   4%|▍         | 20/516 [00:03<01:07,  7.38it/s]Batches:   4%|▍         | 21/516 [00:03<01:08,  7.26it/s]Batches:   4%|▍         | 22/516 [00:03<01:07,  7.31it/s]Batches:   4%|▍         | 23/516 [00:03<01:13,  6.73it/s]Batches:   5%|▍         | 24/516 [00:03<01:09,  7.11it/s]Batches:   5%|▍         | 25/516 [00:03<01:07,  7.28it/s]Batches:   5%|▌         | 26/516 [00:03<01:06,  7.42it/s]Batches:   5%|▌         | 27/516 [00:04<01:13,  6.67it/s]Batches:   5%|▌         | 28/516 [00:04<01:09,  7.05it/s]Batches:   6%|▌         | 29/516 [00:04<01:11,  6.86it/s]Batches:   6%|▌         | 30/516 [00:04<01:06,  7.30it/s]Batches:   6%|▌         | 31/516 [00:04<01:09,  6.96it/s]Batches:   6%|▌         | 32/516 [00:04<01:05,  7.38it/s]Batches:   6%|▋         | 33/516 [00:04<01:02,  7.70it/s]Batches:   7%|▋         | 34/516 [00:05<01:06,  7.24it/s]Batches:   7%|▋         | 35/516 [00:05<01:02,  7.68it/s]Batches:   7%|▋         | 36/516 [00:05<00:59,  8.01it/s]Batches:   7%|▋         | 37/516 [00:05<00:58,  8.23it/s]Batches:   7%|▋         | 38/516 [00:05<00:56,  8.42it/s]Batches:   8%|▊         | 39/516 [00:05<01:03,  7.53it/s]Batches:   8%|▊         | 40/516 [00:05<01:03,  7.48it/s]Batches:   8%|▊         | 41/516 [00:05<01:00,  7.82it/s]Batches:   8%|▊         | 42/516 [00:06<00:59,  8.02it/s]Batches:   8%|▊         | 43/516 [00:06<01:04,  7.36it/s]Batches:   9%|▊         | 44/516 [00:06<01:06,  7.15it/s]Batches:   9%|▊         | 45/516 [00:06<01:05,  7.16it/s]Batches:   9%|▉         | 46/516 [00:06<01:00,  7.77it/s]Batches:   9%|▉         | 47/516 [00:06<00:57,  8.19it/s]Batches:   9%|▉         | 48/516 [00:06<00:55,  8.42it/s]Batches:   9%|▉         | 49/516 [00:06<00:55,  8.40it/s]Batches:  10%|▉         | 50/516 [00:07<01:01,  7.61it/s]Batches:  10%|▉         | 51/516 [00:07<00:57,  8.07it/s]Batches:  10%|█         | 52/516 [00:07<00:54,  8.47it/s]Batches:  10%|█         | 53/516 [00:07<00:58,  7.98it/s]Batches:  11%|█         | 55/516 [00:07<00:55,  8.27it/s]Batches:  11%|█         | 57/516 [00:07<00:50,  9.03it/s]Batches:  11%|█         | 58/516 [00:08<00:50,  9.02it/s]Batches:  11%|█▏        | 59/516 [00:08<00:54,  8.34it/s]Batches:  12%|█▏        | 61/516 [00:08<00:54,  8.37it/s]Batches:  12%|█▏        | 63/516 [00:08<00:50,  9.01it/s]Batches:  12%|█▏        | 64/516 [00:08<00:49,  9.10it/s]Batches:  13%|█▎        | 65/516 [00:08<00:50,  8.99it/s]Batches:  13%|█▎        | 66/516 [00:08<00:49,  9.11it/s]Batches:  13%|█▎        | 67/516 [00:09<00:54,  8.29it/s]Batches:  13%|█▎        | 68/516 [00:09<00:55,  8.10it/s]Batches:  14%|█▎        | 70/516 [00:09<00:52,  8.54it/s]Batches:  14%|█▍        | 72/516 [00:09<00:47,  9.38it/s]Batches:  14%|█▍        | 74/516 [00:09<00:44,  9.83it/s]Batches:  15%|█▍        | 75/516 [00:09<00:48,  9.05it/s]Batches:  15%|█▍        | 77/516 [00:10<00:44,  9.83it/s]Batches:  15%|█▌        | 79/516 [00:10<00:44,  9.82it/s]Batches:  16%|█▌        | 81/516 [00:10<00:43, 10.01it/s]Batches:  16%|█▌        | 83/516 [00:10<00:44,  9.75it/s]Batches:  16%|█▋        | 85/516 [00:10<00:42, 10.10it/s]Batches:  17%|█▋        | 87/516 [00:11<00:41, 10.25it/s]Batches:  17%|█▋        | 89/516 [00:11<00:46,  9.15it/s]Batches:  18%|█▊        | 91/516 [00:11<00:47,  8.90it/s]Batches:  18%|█▊        | 92/516 [00:11<00:48,  8.75it/s]Batches:  18%|█▊        | 93/516 [00:11<00:49,  8.59it/s]Batches:  18%|█▊        | 95/516 [00:12<00:46,  9.08it/s]Batches:  19%|█▉        | 97/516 [00:12<00:42,  9.95it/s]Batches:  19%|█▉        | 99/516 [00:12<00:39, 10.50it/s]Batches:  20%|█▉        | 101/516 [00:12<00:41, 10.00it/s]Batches:  20%|█▉        | 103/516 [00:12<00:39, 10.55it/s]Batches:  20%|██        | 105/516 [00:12<00:40, 10.24it/s]Batches:  21%|██        | 107/516 [00:13<00:37, 10.76it/s]Batches:  21%|██        | 109/516 [00:13<00:39, 10.27it/s]Batches:  22%|██▏       | 111/516 [00:13<00:38, 10.61it/s]Batches:  22%|██▏       | 113/516 [00:13<00:36, 11.16it/s]Batches:  22%|██▏       | 115/516 [00:13<00:37, 10.60it/s]Batches:  23%|██▎       | 117/516 [00:14<00:38, 10.48it/s]Batches:  23%|██▎       | 119/516 [00:14<00:35, 11.16it/s]Batches:  23%|██▎       | 121/516 [00:14<00:36, 10.84it/s]Batches:  24%|██▍       | 123/516 [00:14<00:35, 11.17it/s]Batches:  24%|██▍       | 125/516 [00:14<00:36, 10.79it/s]Batches:  25%|██▍       | 127/516 [00:14<00:33, 11.44it/s]Batches:  25%|██▌       | 129/516 [00:15<00:33, 11.69it/s]Batches:  25%|██▌       | 131/516 [00:15<00:34, 11.05it/s]Batches:  26%|██▌       | 133/516 [00:15<00:32, 11.62it/s]Batches:  26%|██▌       | 135/516 [00:15<00:34, 11.09it/s]Batches:  27%|██▋       | 137/516 [00:15<00:33, 11.22it/s]Batches:  27%|██▋       | 139/516 [00:15<00:31, 12.06it/s]Batches:  27%|██▋       | 141/516 [00:16<00:29, 12.58it/s]Batches:  28%|██▊       | 143/516 [00:16<00:28, 13.01it/s]Batches:  28%|██▊       | 145/516 [00:16<00:28, 13.08it/s]Batches:  28%|██▊       | 147/516 [00:16<00:27, 13.20it/s]Batches:  29%|██▉       | 149/516 [00:16<00:27, 13.22it/s]Batches:  29%|██▉       | 151/516 [00:16<00:27, 13.42it/s]Batches:  30%|██▉       | 153/516 [00:17<00:27, 13.44it/s]Batches:  30%|███       | 155/516 [00:17<00:28, 12.47it/s]Batches:  30%|███       | 157/516 [00:17<00:29, 12.12it/s]Batches:  31%|███       | 159/516 [00:17<00:27, 12.86it/s]Batches:  31%|███       | 161/516 [00:17<00:28, 12.38it/s]Batches:  32%|███▏      | 163/516 [00:17<00:26, 13.56it/s]Batches:  32%|███▏      | 165/516 [00:17<00:26, 13.26it/s]Batches:  32%|███▏      | 167/516 [00:18<00:26, 13.20it/s]Batches:  33%|███▎      | 169/516 [00:18<00:24, 14.21it/s]Batches:  33%|███▎      | 171/516 [00:18<00:25, 13.69it/s]Batches:  34%|███▎      | 173/516 [00:18<00:23, 14.72it/s]Batches:  34%|███▍      | 175/516 [00:18<00:22, 15.22it/s]Batches:  34%|███▍      | 177/516 [00:18<00:21, 15.66it/s]Batches:  35%|███▍      | 179/516 [00:18<00:24, 13.99it/s]Batches:  35%|███▌      | 181/516 [00:19<00:23, 14.56it/s]Batches:  35%|███▌      | 183/516 [00:19<00:23, 13.91it/s]Batches:  36%|███▌      | 185/516 [00:19<00:22, 14.87it/s]Batches:  36%|███▌      | 187/516 [00:19<00:21, 15.47it/s]Batches:  37%|███▋      | 189/516 [00:19<00:20, 15.97it/s]Batches:  37%|███▋      | 191/516 [00:19<00:20, 16.24it/s]Batches:  37%|███▋      | 193/516 [00:19<00:21, 14.91it/s]Batches:  38%|███▊      | 195/516 [00:19<00:20, 15.55it/s]Batches:  38%|███▊      | 197/516 [00:20<00:19, 15.99it/s]Batches:  39%|███▊      | 199/516 [00:20<00:21, 14.90it/s]Batches:  39%|███▉      | 201/516 [00:20<00:19, 15.84it/s]Batches:  39%|███▉      | 203/516 [00:20<00:20, 14.96it/s]Batches:  40%|███▉      | 205/516 [00:20<00:19, 16.03it/s]Batches:  40%|████      | 207/516 [00:20<00:18, 16.88it/s]Batches:  41%|████      | 209/516 [00:20<00:19, 15.85it/s]Batches:  41%|████      | 211/516 [00:20<00:18, 16.56it/s]Batches:  41%|████▏     | 213/516 [00:21<00:19, 15.45it/s]Batches:  42%|████▏     | 215/516 [00:21<00:18, 16.57it/s]Batches:  42%|████▏     | 217/516 [00:21<00:17, 17.19it/s]Batches:  42%|████▏     | 219/516 [00:21<00:18, 16.00it/s]Batches:  43%|████▎     | 221/516 [00:21<00:17, 16.95it/s]Batches:  43%|████▎     | 223/516 [00:21<00:16, 17.66it/s]Batches:  44%|████▎     | 225/516 [00:21<00:18, 15.89it/s]Batches:  44%|████▍     | 227/516 [00:21<00:17, 16.33it/s]Batches:  44%|████▍     | 229/516 [00:22<00:17, 16.85it/s]Batches:  45%|████▍     | 231/516 [00:22<00:16, 17.21it/s]Batches:  45%|████▌     | 233/516 [00:22<00:16, 17.52it/s]Batches:  46%|████▌     | 235/516 [00:22<00:18, 14.89it/s]Batches:  46%|████▌     | 237/516 [00:22<00:17, 15.68it/s]Batches:  46%|████▋     | 239/516 [00:22<00:16, 16.34it/s]Batches:  47%|████▋     | 241/516 [00:22<00:16, 16.85it/s]Batches:  47%|████▋     | 243/516 [00:22<00:15, 17.15it/s]Batches:  47%|████▋     | 245/516 [00:22<00:15, 17.46it/s]Batches:  48%|████▊     | 247/516 [00:23<00:18, 14.83it/s]Batches:  48%|████▊     | 249/516 [00:23<00:16, 15.72it/s]Batches:  49%|████▊     | 251/516 [00:23<00:17, 15.18it/s]Batches:  49%|████▉     | 253/516 [00:23<00:17, 15.02it/s]Batches:  50%|████▉     | 256/516 [00:23<00:15, 16.98it/s]Batches:  50%|█████     | 259/516 [00:23<00:13, 18.37it/s]Batches:  51%|█████     | 262/516 [00:23<00:13, 19.23it/s]Batches:  51%|█████▏    | 265/516 [00:24<00:12, 19.58it/s]Batches:  52%|█████▏    | 268/516 [00:24<00:13, 18.20it/s]Batches:  53%|█████▎    | 271/516 [00:24<00:12, 19.16it/s]Batches:  53%|█████▎    | 273/516 [00:24<00:13, 17.99it/s]Batches:  53%|█████▎    | 276/516 [00:24<00:12, 19.21it/s]Batches:  54%|█████▍    | 279/516 [00:24<00:11, 20.12it/s]Batches:  55%|█████▍    | 282/516 [00:24<00:11, 20.79it/s]Batches:  55%|█████▌    | 285/516 [00:25<00:10, 21.48it/s]Batches:  56%|█████▌    | 288/516 [00:25<00:10, 21.80it/s]Batches:  56%|█████▋    | 291/516 [00:25<00:10, 22.00it/s]Batches:  57%|█████▋    | 294/516 [00:25<00:11, 19.01it/s]Batches:  57%|█████▋    | 296/516 [00:25<00:12, 17.56it/s]Batches:  58%|█████▊    | 299/516 [00:25<00:12, 16.92it/s]Batches:  59%|█████▊    | 302/516 [00:26<00:11, 18.76it/s]Batches:  59%|█████▉    | 305/516 [00:26<00:10, 20.23it/s]Batches:  60%|█████▉    | 308/516 [00:26<00:09, 21.18it/s]Batches:  60%|██████    | 311/516 [00:26<00:09, 21.53it/s]Batches:  61%|██████    | 314/516 [00:26<00:10, 19.33it/s]Batches:  61%|██████▏   | 317/516 [00:26<00:09, 20.09it/s]Batches:  62%|██████▏   | 320/516 [00:26<00:10, 18.04it/s]Batches:  62%|██████▏   | 322/516 [00:27<00:10, 17.83it/s]Batches:  63%|██████▎   | 324/516 [00:27<00:11, 17.09it/s]Batches:  63%|██████▎   | 326/516 [00:27<00:11, 16.15it/s]Batches:  64%|██████▎   | 328/516 [00:27<00:12, 15.54it/s]Batches:  64%|██████▍   | 330/516 [00:27<00:16, 11.61it/s]Batches:  64%|██████▍   | 332/516 [00:27<00:14, 12.59it/s]Batches:  65%|██████▍   | 334/516 [00:28<00:13, 13.33it/s]Batches:  65%|██████▌   | 336/516 [00:28<00:12, 14.10it/s]Batches:  66%|██████▌   | 338/516 [00:28<00:11, 14.98it/s]Batches:  66%|██████▌   | 340/516 [00:28<00:11, 15.97it/s]Batches:  66%|██████▋   | 342/516 [00:28<00:12, 13.46it/s]Batches:  67%|██████▋   | 344/516 [00:28<00:14, 12.14it/s]Batches:  67%|██████▋   | 347/516 [00:28<00:11, 14.59it/s]Batches:  68%|██████▊   | 349/516 [00:29<00:12, 13.49it/s]Batches:  68%|██████▊   | 352/516 [00:29<00:10, 16.01it/s]Batches:  69%|██████▉   | 355/516 [00:29<00:08, 18.19it/s]Batches:  69%|██████▉   | 358/516 [00:29<00:07, 20.15it/s]Batches:  70%|██████▉   | 361/516 [00:29<00:07, 21.88it/s]Batches:  71%|███████   | 364/516 [00:29<00:06, 23.04it/s]Batches:  71%|███████   | 367/516 [00:29<00:07, 20.34it/s]Batches:  72%|███████▏  | 370/516 [00:29<00:06, 22.12it/s]Batches:  72%|███████▏  | 373/516 [00:30<00:07, 19.65it/s]Batches:  73%|███████▎  | 376/516 [00:30<00:06, 21.68it/s]Batches:  73%|███████▎  | 379/516 [00:30<00:05, 23.57it/s]Batches:  74%|███████▍  | 383/516 [00:30<00:05, 25.73it/s]Batches:  75%|███████▌  | 387/516 [00:30<00:04, 27.33it/s]Batches:  76%|███████▌  | 390/516 [00:30<00:05, 24.53it/s]Batches:  76%|███████▋  | 394/516 [00:30<00:04, 26.55it/s]Batches:  77%|███████▋  | 397/516 [00:31<00:05, 23.74it/s]Batches:  78%|███████▊  | 401/516 [00:31<00:04, 25.98it/s]Batches:  78%|███████▊  | 405/516 [00:31<00:03, 27.75it/s]Batches:  79%|███████▉  | 409/516 [00:31<00:03, 29.01it/s]Batches:  80%|███████▉  | 412/516 [00:31<00:04, 25.49it/s]Batches:  81%|████████  | 416/516 [00:31<00:04, 23.60it/s]Batches:  81%|████████  | 419/516 [00:32<00:05, 18.38it/s]Batches:  82%|████████▏ | 423/516 [00:32<00:04, 21.13it/s]Batches:  83%|████████▎ | 426/516 [00:32<00:04, 19.30it/s]Batches:  83%|████████▎ | 429/516 [00:32<00:05, 16.88it/s]Batches:  84%|████████▍ | 433/516 [00:32<00:04, 17.87it/s]Batches:  85%|████████▍ | 437/516 [00:32<00:03, 21.43it/s]Batches:  85%|████████▌ | 441/516 [00:33<00:03, 24.53it/s]Batches:  86%|████████▌ | 445/516 [00:33<00:02, 27.24it/s]Batches:  87%|████████▋ | 449/516 [00:33<00:02, 25.13it/s]Batches:  88%|████████▊ | 453/516 [00:33<00:02, 28.31it/s]Batches:  89%|████████▊ | 457/516 [00:33<00:01, 30.92it/s]Batches:  89%|████████▉ | 461/516 [00:33<00:01, 27.83it/s]Batches:  90%|█████████ | 465/516 [00:33<00:01, 26.99it/s]Batches:  91%|█████████ | 470/516 [00:34<00:01, 31.47it/s]Batches:  92%|█████████▏| 475/516 [00:34<00:01, 35.41it/s]Batches:  93%|█████████▎| 479/516 [00:34<00:01, 32.11it/s]Batches:  94%|█████████▍| 484/516 [00:34<00:01, 31.74it/s]Batches:  95%|█████████▍| 488/516 [00:34<00:00, 30.83it/s]Batches:  96%|█████████▌| 493/516 [00:34<00:00, 35.10it/s]Batches:  96%|█████████▋| 497/516 [00:34<00:00, 34.43it/s]Batches:  97%|█████████▋| 501/516 [00:34<00:00, 34.42it/s]Batches:  98%|█████████▊| 506/516 [00:35<00:00, 38.33it/s]Batches:  99%|█████████▉| 510/516 [00:35<00:00, 36.74it/s]Batches: 100%|█████████▉| 514/516 [00:35<00:00, 35.48it/s]Batches: 100%|██████████| 516/516 [00:35<00:00, 14.58it/s]
+Batches:   0%|          | 0/350 [00:00<?, ?it/s]Batches:   0%|          | 1/350 [00:00<01:03,  5.49it/s]Batches:   1%|          | 3/350 [00:00<00:40,  8.56it/s]Batches:   1%|▏         | 5/350 [00:00<00:35,  9.76it/s]Batches:   2%|▏         | 7/350 [00:00<00:31, 10.87it/s]Batches:   3%|▎         | 9/350 [00:00<00:28, 11.88it/s]Batches:   3%|▎         | 11/350 [00:00<00:26, 12.57it/s]Batches:   4%|▎         | 13/350 [00:01<00:25, 13.47it/s]Batches:   4%|▍         | 15/350 [00:01<00:24, 13.94it/s]Batches:   5%|▍         | 17/350 [00:01<00:23, 14.47it/s]Batches:   5%|▌         | 19/350 [00:01<00:21, 15.37it/s]Batches:   6%|▌         | 21/350 [00:01<00:21, 15.63it/s]Batches:   7%|▋         | 23/350 [00:01<00:20, 15.91it/s]Batches:   7%|▋         | 25/350 [00:01<00:20, 16.21it/s]Batches:   8%|▊         | 27/350 [00:01<00:20, 16.09it/s]Batches:   8%|▊         | 29/350 [00:02<00:20, 15.84it/s]Batches:   9%|▉         | 31/350 [00:02<00:19, 16.03it/s]Batches:   9%|▉         | 33/350 [00:02<00:19, 16.07it/s]Batches:  10%|█         | 35/350 [00:02<00:19, 16.03it/s]Batches:  11%|█         | 37/350 [00:02<00:19, 15.88it/s]Batches:  11%|█         | 39/350 [00:02<00:19, 15.82it/s]Batches:  12%|█▏        | 41/350 [00:02<00:19, 15.54it/s]Batches:  12%|█▏        | 43/350 [00:02<00:19, 16.08it/s]Batches:  13%|█▎        | 45/350 [00:03<00:18, 16.45it/s]Batches:  13%|█▎        | 47/350 [00:03<00:18, 16.39it/s]Batches:  14%|█▍        | 49/350 [00:03<00:18, 16.57it/s]Batches:  15%|█▍        | 51/350 [00:03<00:18, 16.61it/s]Batches:  15%|█▌        | 53/350 [00:03<00:17, 16.70it/s]Batches:  16%|█▌        | 55/350 [00:03<00:17, 17.05it/s]Batches:  16%|█▋        | 57/350 [00:03<00:17, 16.84it/s]Batches:  17%|█▋        | 59/350 [00:03<00:16, 17.29it/s]Batches:  17%|█▋        | 61/350 [00:04<00:16, 17.27it/s]Batches:  18%|█▊        | 63/350 [00:04<00:16, 17.65it/s]Batches:  19%|█▊        | 65/350 [00:04<00:15, 18.04it/s]Batches:  19%|█▉        | 67/350 [00:04<00:15, 17.92it/s]Batches:  20%|█▉        | 69/350 [00:04<00:15, 17.82it/s]Batches:  20%|██        | 71/350 [00:04<00:15, 17.71it/s]Batches:  21%|██        | 73/350 [00:04<00:15, 17.78it/s]Batches:  21%|██▏       | 75/350 [00:04<00:15, 17.96it/s]Batches:  22%|██▏       | 77/350 [00:04<00:14, 18.36it/s]Batches:  23%|██▎       | 79/350 [00:05<00:14, 18.72it/s]Batches:  23%|██▎       | 81/350 [00:05<00:14, 18.73it/s]Batches:  24%|██▎       | 83/350 [00:05<00:14, 18.71it/s]Batches:  24%|██▍       | 85/350 [00:05<00:14, 18.77it/s]Batches:  25%|██▍       | 87/350 [00:05<00:14, 18.61it/s]Batches:  25%|██▌       | 89/350 [00:05<00:13, 18.86it/s]Batches:  26%|██▌       | 91/350 [00:05<00:13, 19.14it/s]Batches:  27%|██▋       | 93/350 [00:05<00:13, 19.05it/s]Batches:  27%|██▋       | 95/350 [00:05<00:13, 19.17it/s]Batches:  28%|██▊       | 97/350 [00:05<00:13, 19.41it/s]Batches:  28%|██▊       | 99/350 [00:06<00:13, 18.98it/s]Batches:  29%|██▉       | 101/350 [00:06<00:13, 19.05it/s]Batches:  30%|██▉       | 104/350 [00:06<00:12, 19.47it/s]Batches:  30%|███       | 106/350 [00:06<00:12, 19.32it/s]Batches:  31%|███       | 109/350 [00:06<00:12, 19.83it/s]Batches:  32%|███▏      | 111/350 [00:06<00:12, 19.50it/s]Batches:  32%|███▏      | 113/350 [00:06<00:12, 19.58it/s]Batches:  33%|███▎      | 115/350 [00:06<00:12, 19.49it/s]Batches:  33%|███▎      | 117/350 [00:06<00:12, 19.28it/s]Batches:  34%|███▍      | 119/350 [00:07<00:11, 19.44it/s]Batches:  35%|███▍      | 122/350 [00:07<00:11, 19.70it/s]Batches:  36%|███▌      | 125/350 [00:07<00:11, 20.04it/s]Batches:  37%|███▋      | 128/350 [00:07<00:11, 20.04it/s]Batches:  37%|███▋      | 131/350 [00:07<00:10, 20.49it/s]Batches:  38%|███▊      | 134/350 [00:07<00:10, 20.93it/s]Batches:  39%|███▉      | 137/350 [00:07<00:10, 21.25it/s]Batches:  40%|████      | 140/350 [00:08<00:10, 20.78it/s]Batches:  41%|████      | 143/350 [00:08<00:09, 21.13it/s]Batches:  42%|████▏     | 146/350 [00:08<00:09, 21.16it/s]Batches:  43%|████▎     | 149/350 [00:08<00:09, 21.12it/s]Batches:  43%|████▎     | 152/350 [00:08<00:09, 21.46it/s]Batches:  44%|████▍     | 155/350 [00:08<00:09, 21.33it/s]Batches:  45%|████▌     | 158/350 [00:08<00:08, 21.73it/s]Batches:  46%|████▌     | 161/350 [00:09<00:08, 22.07it/s]Batches:  47%|████▋     | 164/350 [00:09<00:08, 22.25it/s]Batches:  48%|████▊     | 167/350 [00:09<00:08, 22.63it/s]Batches:  49%|████▊     | 170/350 [00:09<00:08, 22.44it/s]Batches:  49%|████▉     | 173/350 [00:09<00:07, 22.67it/s]Batches:  50%|█████     | 176/350 [00:09<00:07, 22.90it/s]Batches:  51%|█████     | 179/350 [00:09<00:07, 23.12it/s]Batches:  52%|█████▏    | 182/350 [00:09<00:07, 23.34it/s]Batches:  53%|█████▎    | 185/350 [00:10<00:07, 23.30it/s]Batches:  54%|█████▎    | 188/350 [00:10<00:06, 23.62it/s]Batches:  55%|█████▍    | 191/350 [00:10<00:06, 22.91it/s]Batches:  55%|█████▌    | 194/350 [00:10<00:06, 23.20it/s]Batches:  56%|█████▋    | 197/350 [00:10<00:06, 23.24it/s]Batches:  57%|█████▋    | 200/350 [00:10<00:06, 23.23it/s]Batches:  58%|█████▊    | 203/350 [00:10<00:06, 23.40it/s]Batches:  59%|█████▉    | 206/350 [00:10<00:06, 23.70it/s]Batches:  60%|█████▉    | 209/350 [00:11<00:05, 23.75it/s]Batches:  61%|██████    | 212/350 [00:11<00:05, 23.83it/s]Batches:  61%|██████▏   | 215/350 [00:11<00:05, 24.15it/s]Batches:  62%|██████▏   | 218/350 [00:11<00:05, 24.46it/s]Batches:  63%|██████▎   | 221/350 [00:11<00:05, 24.32it/s]Batches:  64%|██████▍   | 224/350 [00:11<00:05, 23.99it/s]Batches:  65%|██████▍   | 227/350 [00:11<00:05, 23.99it/s]Batches:  66%|██████▌   | 230/350 [00:11<00:05, 23.91it/s]Batches:  67%|██████▋   | 233/350 [00:12<00:04, 24.14it/s]Batches:  67%|██████▋   | 236/350 [00:12<00:04, 24.43it/s]Batches:  68%|██████▊   | 239/350 [00:12<00:04, 24.88it/s]Batches:  69%|██████▉   | 242/350 [00:12<00:04, 25.61it/s]Batches:  70%|███████   | 245/350 [00:12<00:04, 25.30it/s]Batches:  71%|███████   | 248/350 [00:12<00:03, 25.64it/s]Batches:  72%|███████▏  | 251/350 [00:12<00:03, 25.92it/s]Batches:  73%|███████▎  | 254/350 [00:12<00:03, 25.72it/s]Batches:  73%|███████▎  | 257/350 [00:13<00:03, 26.45it/s]Batches:  74%|███████▍  | 260/350 [00:13<00:03, 26.84it/s]Batches:  75%|███████▌  | 263/350 [00:13<00:03, 27.02it/s]Batches:  76%|███████▌  | 266/350 [00:13<00:03, 27.44it/s]Batches:  77%|███████▋  | 269/350 [00:13<00:02, 28.02it/s]Batches:  78%|███████▊  | 272/350 [00:13<00:02, 28.45it/s]Batches:  79%|███████▊  | 275/350 [00:13<00:02, 28.78it/s]Batches:  80%|███████▉  | 279/350 [00:13<00:02, 29.49it/s]Batches:  81%|████████  | 282/350 [00:13<00:02, 29.05it/s]Batches:  82%|████████▏ | 286/350 [00:14<00:02, 29.79it/s]Batches:  83%|████████▎ | 290/350 [00:14<00:01, 30.35it/s]Batches:  84%|████████▍ | 294/350 [00:14<00:01, 31.55it/s]Batches:  85%|████████▌ | 298/350 [00:14<00:01, 32.75it/s]Batches:  86%|████████▋ | 302/350 [00:14<00:01, 33.84it/s]Batches:  87%|████████▋ | 306/350 [00:14<00:01, 34.78it/s]Batches:  89%|████████▊ | 310/350 [00:14<00:01, 35.44it/s]Batches:  90%|████████▉ | 314/350 [00:14<00:00, 36.37it/s]Batches:  91%|█████████ | 318/350 [00:14<00:00, 36.70it/s]Batches:  92%|█████████▏| 322/350 [00:15<00:00, 31.25it/s]Batches:  93%|█████████▎| 327/350 [00:15<00:00, 33.86it/s]Batches:  95%|█████████▍| 331/350 [00:15<00:00, 35.35it/s]Batches:  96%|█████████▌| 336/350 [00:15<00:00, 38.37it/s]Batches:  97%|█████████▋| 341/350 [00:15<00:00, 39.62it/s]Batches:  99%|█████████▉| 346/350 [00:15<00:00, 42.33it/s]Batches: 100%|██████████| 350/350 [00:15<00:00, 22.22it/s]
+Saved pseudo_clusters/sbert-multi_cold_conf995_global_k50_aligned_260424_v1/clustered_high_confidence_samples.csv
+Saved pseudo_clusters/sbert-multi_cold_conf995_global_k50_aligned_260424_v1/cluster_summary.csv
+Saved pseudo_clusters/sbert-multi_cold_conf995_global_k50_aligned_260424_v1/selected_cluster_samples.csv
+High-confidence samples: 16512
+Kept clusters before alignment: 40
+Kept clusters after alignment: 22
+Kept samples: 7502
+
+[2/6] Replace part of IHC train set with selected pseudo samples
+Saved raw_dataset/ihc_pure_cold_pseudo_260424_v1/train.tsv
+Selected pseudo samples: 878
+Removed IHC samples: 878
+Train size kept at: 11199
+
+[3/6] Remove selected pseudo rows from future COLD evaluation data
+Saved preprocessed_data/preprocessed_cold_no_pseudo_260424_v1.pkl
+train: 24848
+valid: 6431
+test: 5323
+Excluded train rows: 878
+Saved filtered raw dataset to raw_dataset/cold_no_pseudo_260424_v1
+
+[4/6] Build clustered mixed dataset using stored pseudo-to-IHC alignment
+/opt/homebrew/Caskroom/miniconda/base/envs/sharedcon/lib/python3.11/site-packages/bitsandbytes/cextension.py:34: UserWarning: The installed version of bitsandbytes was compiled without GPU support. 8-bit optimizers, 8-bit multiplication, and GPU quantization are unavailable.
+  warn("The installed version of bitsandbytes was compiled without GPU support. "
+'NoneType' object has no attribute 'cadam32bit_grad_fp32'
+LOAD_SENT_EMB_MODEL: sbert-multi
+INFO:sentence_transformers.SentenceTransformer:Use pytorch device_name: mps
+INFO:sentence_transformers.SentenceTransformer:Load pretrained SentenceTransformer: sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+use stored pseudo-to-IHC cluster alignment from raw mixed dataset
+/Users/cyucccx/Desktop/Project/sharedcon_multilangual_zh_pseudo_label/shared_semantics.py:168: FutureWarning: The behavior of DataFrame concatenation with empty or all-NA entries is deprecated. In a future version, this will no longer exclude empty or all-NA columns when determining the result dtypes. To retain the old behavior, exclude the relevant entries before the concat operation.
+  total_train_dataset = pd.concat([english_rows, pseudo_rows], ignore_index=True)
+aligned pseudo COLD clusters to base IHC clusters
+Clustered dataset is saved at clustered_dataset/sbert-multi/ihc_pure_cold_pseudo_260424_v1_c10
+
+[5/6] Preprocess clustered mixed dataset
+Tokenizing data
+The tokenized data is saved at preprocessed_data/preprocessed_sbert-multi_ihc_pure_cold_pseudo_260424_v1_c10.pkl
+Tokenizing data
+The tokenized data is saved at preprocessed_data/preprocessed_sbert-multi_ihc_pure_cold_pseudo_260424_v1_c10.pkl
+Tokenizing data
+The tokenized data is saved at preprocessed_data/preprocessed_sbert-multi_ihc_pure_cold_pseudo_260424_v1_c10.pkl
+
+[6/6] Fine-tune from original IHC multilingual checkpoint
+train.py will initialize from: save/sbert-multi/sbert-multi_ihc_pure_c10/0/model_260421_v0.pt
+#######################start run#######################
+log: {'param': {'temperature': 0.5, 'run_name': 'sbert-multi', 'dataset': 'ihc_pure_cold_pseudo_260424_v1_c10', 'main_learning_rate': 1e-05, 'train_batch_size': 8, 'eval_batch_size': 8, 'hidden_size': 768, 'nepoch': 6, 'lambda_loss': 0.75, 'loss_type': '', 'decay': 0.0, 'SEED': 0, 'model_type': 'bert-base-multilingual-cased', 'init_checkpoint_dir': 'save/sbert-multi/sbert-multi_ihc_pure_c10/0', 'init_checkpoint_filename': 'model_260421_v0.pt', 'w_aug': True, 'w_sup': False, 'save': True, 'skip_eval': True, 'w_double': False, 'w_separate': False, 'label_size': 2}}
+training data will be loaded from: preprocessed_data/preprocessed_sbert-multi_ihc_pure_cold_pseudo_260424_v1_c10.pkl
+len(train_data): 1400
+/Users/cyucccx/Desktop/Project/sharedcon_multilangual_zh_pseudo_label/train.py:353: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  model_main.load_state_dict(torch.load(checkpoint_path, map_location=device))
+fine-tune starts from checkpoint: save/sbert-multi/sbert-multi_ihc_pure_c10/0/model_260421_v0.pt
+For ihc, eps for AdaW optimizer is set to 1e-8 following latent hatred
+training outputs will be written under: ./save/sbert-multi//ihc_pure_cold_pseudo_260424_v1_c10/0/
+train with aug: True
+train with double aug: False
+train with separate double aug: False
+loss with sup(using label info): False
+len(train_loader): 1400
+train_batch_size including augmented posts/implications: 16
+BertSdpaSelfAttention is used but `torch.nn.functional.scaled_dot_product_attention` does not support non-absolute `position_embedding_type` or `output_attentions=True` or `head_mask`. Falling back to the manual attention implementation, but specifying the manual implementation will be required from Transformers version v5.0.0 onwards. This warning can be removed using the argument `attn_implementation="eager"` when loading the model.
+Epoch: 01, Idx: 100, Training Loss_1: 0.4706, Time taken:  4.36 min
+Epoch: 01, Idx: 200, Training Loss_1: 0.3810, Time taken:  4.17 min
+Epoch: 01, Idx: 300, Training Loss_1: 0.6742, Time taken:  3.94 min
+Epoch: 01, Idx: 400, Training Loss_1: 0.6217, Time taken:  3.92 min
+Epoch: 01, Idx: 500, Training Loss_1: 0.8971, Time taken:  3.93 min
+Epoch: 01, Idx: 600, Training Loss_1: 0.3694, Time taken:  3.92 min
+Epoch: 01, Idx: 700, Training Loss_1: 0.6873, Time taken:  3.88 min
+Epoch: 01, Idx: 800, Training Loss_1: 0.4232, Time taken:  3.94 min
+Epoch: 01, Idx: 900, Training Loss_1: 0.4697, Time taken:  3.96 min
+Epoch: 01, Idx: 1000, Training Loss_1: 0.6065, Time taken:  3.94 min
+Epoch: 01, Idx: 1100, Training Loss_1: 1.2288, Time taken:  3.96 min
+Epoch: 01, Idx: 1200, Training Loss_1: 0.4128, Time taken:  4.00 min
+Epoch: 01, Idx: 1300, Training Loss_1: 0.8349, Time taken:  3.98 min
+0.5580894574522972
+93.8125
+====> Epoch: 1 Train loss_1: 0.5581
+Train Accuracy: 93.81
+train with aug: True
+train with double aug: False
+train with separate double aug: False
+loss with sup(using label info): False
+len(train_loader): 1400
+train_batch_size including augmented posts/implications: 16
+Epoch: 02, Idx: 100, Training Loss_1: 0.8865, Time taken:  4.03 min
+Epoch: 02, Idx: 200, Training Loss_1: 0.4029, Time taken:  4.01 min
+Epoch: 02, Idx: 300, Training Loss_1: 0.4747, Time taken:  4.00 min
+Epoch: 02, Idx: 400, Training Loss_1: 0.4839, Time taken:  4.03 min
+Epoch: 02, Idx: 500, Training Loss_1: 2.2621, Time taken:  4.00 min
+Epoch: 02, Idx: 600, Training Loss_1: 0.3727, Time taken:  4.03 min
+Epoch: 02, Idx: 700, Training Loss_1: 0.3814, Time taken:  4.01 min
+Epoch: 02, Idx: 800, Training Loss_1: 0.4792, Time taken:  4.06 min
+Epoch: 02, Idx: 900, Training Loss_1: 0.3604, Time taken:  4.06 min
+Epoch: 02, Idx: 1000, Training Loss_1: 1.3767, Time taken:  4.07 min
+Epoch: 02, Idx: 1100, Training Loss_1: 0.4882, Time taken:  4.02 min
+Epoch: 02, Idx: 1200, Training Loss_1: 0.3132, Time taken:  4.05 min
+Epoch: 02, Idx: 1300, Training Loss_1: 0.3576, Time taken:  4.04 min
+0.498088035179036
+96.01785714285714
+====> Epoch: 2 Train loss_1: 0.4981
+Train Accuracy: 96.02
+train with aug: True
+train with double aug: False
+train with separate double aug: False
+loss with sup(using label info): False
+len(train_loader): 1400
+train_batch_size including augmented posts/implications: 16
+Epoch: 03, Idx: 100, Training Loss_1: 0.5658, Time taken:  4.14 min
+Epoch: 03, Idx: 200, Training Loss_1: 0.4247, Time taken:  4.15 min
+Epoch: 03, Idx: 300, Training Loss_1: 0.8834, Time taken:  4.14 min
+Epoch: 03, Idx: 400, Training Loss_1: 0.3777, Time taken:  4.18 min
+Epoch: 03, Idx: 500, Training Loss_1: 0.7996, Time taken:  4.19 min
+Epoch: 03, Idx: 600, Training Loss_1: 0.3428, Time taken:  4.15 min
+Epoch: 03, Idx: 700, Training Loss_1: 0.6393, Time taken:  4.23 min
+Epoch: 03, Idx: 800, Training Loss_1: 0.4084, Time taken:  4.19 min
+Epoch: 03, Idx: 900, Training Loss_1: 0.3114, Time taken:  4.16 min
+Epoch: 03, Idx: 1000, Training Loss_1: 0.3028, Time taken:  4.16 min
+Epoch: 03, Idx: 1100, Training Loss_1: 0.3176, Time taken:  4.17 min
+Epoch: 03, Idx: 1200, Training Loss_1: 0.4420, Time taken:  4.17 min
+Epoch: 03, Idx: 1300, Training Loss_1: 0.3741, Time taken:  4.15 min
+0.44330106767160554
+97.6875
+====> Epoch: 3 Train loss_1: 0.4433
+Train Accuracy: 97.69
+train with aug: True
+train with double aug: False
+train with separate double aug: False
+loss with sup(using label info): False
+len(train_loader): 1400
+train_batch_size including augmented posts/implications: 16
+Epoch: 04, Idx: 100, Training Loss_1: 0.3202, Time taken:  4.15 min
+Epoch: 04, Idx: 200, Training Loss_1: 0.3283, Time taken:  4.17 min
+Epoch: 04, Idx: 300, Training Loss_1: 0.4832, Time taken:  4.16 min
+Epoch: 04, Idx: 400, Training Loss_1: 0.2837, Time taken:  4.16 min
+Epoch: 04, Idx: 500, Training Loss_1: 0.3521, Time taken:  4.18 min
+Epoch: 04, Idx: 600, Training Loss_1: 0.4146, Time taken:  4.16 min
+Epoch: 04, Idx: 700, Training Loss_1: 0.4039, Time taken:  4.16 min
+Epoch: 04, Idx: 800, Training Loss_1: 0.3803, Time taken:  4.15 min
+Epoch: 04, Idx: 900, Training Loss_1: 0.3332, Time taken:  4.16 min
+Epoch: 04, Idx: 1000, Training Loss_1: 0.3793, Time taken:  4.15 min
+Epoch: 04, Idx: 1100, Training Loss_1: 1.0015, Time taken:  4.15 min
+Epoch: 04, Idx: 1200, Training Loss_1: 0.3157, Time taken:  4.18 min
+Epoch: 04, Idx: 1300, Training Loss_1: 0.3104, Time taken:  4.15 min
+0.41433845539178166
+98.33928571428571
+====> Epoch: 4 Train loss_1: 0.4143
+Train Accuracy: 98.34
+train with aug: True
+train with double aug: False
+train with separate double aug: False
+loss with sup(using label info): False
+len(train_loader): 1400
+train_batch_size including augmented posts/implications: 16
+Epoch: 05, Idx: 100, Training Loss_1: 0.3171, Time taken:  4.13 min
+Epoch: 05, Idx: 200, Training Loss_1: 0.3635, Time taken:  4.20 min
+Epoch: 05, Idx: 300, Training Loss_1: 0.4057, Time taken:  4.25 min
+Epoch: 05, Idx: 400, Training Loss_1: 0.3170, Time taken:  4.16 min
+Epoch: 05, Idx: 500, Training Loss_1: 0.3207, Time taken:  4.16 min
+Epoch: 05, Idx: 600, Training Loss_1: 0.3192, Time taken:  4.18 min
+Epoch: 05, Idx: 700, Training Loss_1: 0.3493, Time taken:  4.17 min
+Epoch: 05, Idx: 800, Training Loss_1: 0.3460, Time taken:  4.18 min
+Epoch: 05, Idx: 900, Training Loss_1: 0.3116, Time taken:  4.18 min
+Epoch: 05, Idx: 1000, Training Loss_1: 0.3229, Time taken:  4.16 min
+Epoch: 05, Idx: 1100, Training Loss_1: 0.2992, Time taken:  4.16 min
+Epoch: 05, Idx: 1200, Training Loss_1: 0.3528, Time taken:  4.14 min
+Epoch: 05, Idx: 1300, Training Loss_1: 0.3535, Time taken:  4.18 min
+0.38570905374629155
+98.97321428571429
+====> Epoch: 5 Train loss_1: 0.3857
+Train Accuracy: 98.97
+train with aug: True
+train with double aug: False
+train with separate double aug: False
+loss with sup(using label info): False
+len(train_loader): 1400
+train_batch_size including augmented posts/implications: 16
+Epoch: 06, Idx: 100, Training Loss_1: 0.3504, Time taken:  4.17 min
+Epoch: 06, Idx: 200, Training Loss_1: 0.3298, Time taken:  4.21 min
+Epoch: 06, Idx: 300, Training Loss_1: 0.3823, Time taken:  4.17 min
+Epoch: 06, Idx: 400, Training Loss_1: 0.3480, Time taken:  4.18 min
+Epoch: 06, Idx: 500, Training Loss_1: 0.3441, Time taken:  4.17 min
+Epoch: 06, Idx: 600, Training Loss_1: 0.3846, Time taken:  4.17 min
+Epoch: 06, Idx: 700, Training Loss_1: 0.3383, Time taken:  4.15 min
+Epoch: 06, Idx: 800, Training Loss_1: 0.3586, Time taken:  4.17 min
+Epoch: 06, Idx: 900, Training Loss_1: 0.3679, Time taken:  4.16 min
+Epoch: 06, Idx: 1000, Training Loss_1: 0.4707, Time taken:  4.18 min
+Epoch: 06, Idx: 1100, Training Loss_1: 0.3183, Time taken:  4.17 min
+Epoch: 06, Idx: 1200, Training Loss_1: 0.3432, Time taken:  4.14 min
+Epoch: 06, Idx: 1300, Training Loss_1: 0.4053, Time taken:  4.14 min
+0.37012693273169656
+99.25
+====> Epoch: 6 Train loss_1: 0.3701
+Train Accuracy: 99.25
+dated checkpoint is saved at ./save/sbert-multi//ihc_pure_cold_pseudo_260424_v1_c10/0/model_260424_v1.pt
+
+[extra] Evaluate fine-tuned model on IHC and COLD with eval.py
+eval.py will use checkpoint: model_260424_v1.pt
+#######################start run#######################
+log: {'param': {'dataset': 'ihc_pure_c10', 'train_batch_size': 8, 'eval_batch_size': 8, 'hidden_size': 768, 'SEED': 0, 'model_type': 'bert-base-multilingual-cased', 'load_dir': 'save/sbert-multi/ihc_pure_cold_pseudo_260424_v1_c10/0', 'model_filename': 'model_260424_v1.pt', 'label_size': 2}}
+/Users/cyucccx/Desktop/Project/sharedcon_multilangual_zh_pseudo_label/eval.py:207: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  model_main.load_state_dict(torch.load(model_path, map_location=device))
+model is loaded from save/sbert-multi/ihc_pure_cold_pseudo_260424_v1_c10/0/model_260424_v1.pt
+467
+BertSdpaSelfAttention is used but `torch.nn.functional.scaled_dot_product_attention` does not support non-absolute `position_embedding_type` or `output_attentions=True` or `head_mask`. Falling back to the manual attention implementation, but specifying the manual implementation will be required from Transformers version v5.0.0 onwards. This warning can be removed using the argument `attn_implementation="eager"` when loading the model.
+467
+Model 1
+Valid Accuracy: 78.60 Valid F1: 0.74
+Test Accuracy: 79.54 Test F1: 0.74
+evaluation log is saved at save/sbert-multi/ihc_pure_cold_pseudo_260424_v1_c10/0/ihc_test_log_260424_v1.json
+#######################start run#######################
+log: {'param': {'dataset': 'cold_no_pseudo_260424_v1', 'train_batch_size': 8, 'eval_batch_size': 8, 'hidden_size': 768, 'SEED': 0, 'model_type': 'bert-base-multilingual-cased', 'load_dir': 'save/sbert-multi/ihc_pure_cold_pseudo_260424_v1_c10/0', 'model_filename': 'model_260424_v1.pt', 'label_size': 2}}
+/Users/cyucccx/Desktop/Project/sharedcon_multilangual_zh_pseudo_label/eval.py:207: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  model_main.load_state_dict(torch.load(model_path, map_location=device))
+model is loaded from save/sbert-multi/ihc_pure_cold_pseudo_260424_v1_c10/0/model_260424_v1.pt
+804
+666
+3106
+Train Accuracy: 56.26 Train F1: 0.49
+Train predictions are saved to save/sbert-multi/ihc_pure_cold_pseudo_260424_v1_c10/0/cold_no_pseudo_260424_v1_train_predictions_260424_v1.csv
+Model 1
+Valid Accuracy: 56.48 Valid F1: 0.49
+Test Accuracy: 47.27 Test F1: 0.43
+evaluation log is saved at save/sbert-multi/ihc_pure_cold_pseudo_260424_v1_c10/0/cold_test_log_260424_v1.json
+
+================ PIPELINE DONE ================
+Pseudo selection output: pseudo_clusters/sbert-multi_cold_conf995_global_k50_aligned_260424_v1
+Injected pseudo samples: raw_dataset/ihc_pure_cold_pseudo_260424_v1/selected_pseudo_samples.csv
+Source save dir: save/sbert-multi/sbert-multi_ihc_pure_c10/0
+Source COLD dataset: raw_dataset/COLDataset
+Mixed raw dataset: raw_dataset/ihc_pure_cold_pseudo_260424_v1
+Filtered COLD raw dataset: raw_dataset/cold_no_pseudo_260424_v1
+Mixed clustered dataset: clustered_dataset/sbert-multi/ihc_pure_cold_pseudo_260424_v1_c10
+Preprocessed file: preprocessed_data/preprocessed_sbert-multi_ihc_pure_cold_pseudo_260424_v1_c10.pkl
+Filtered COLD preprocessed file: preprocessed_data/preprocessed_cold_no_pseudo_260424_v1.pkl
+Fine-tuned save dir: save/sbert-multi/ihc_pure_cold_pseudo_260424_v1_c10/0

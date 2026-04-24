@@ -53,6 +53,10 @@ def apply_eval_env_overrides(param):
     if env_model_filename:
         overridden["model_filename"] = [env_model_filename]
 
+    env_train_only = os.environ.get("EVAL_TRAIN_ONLY")
+    if env_train_only is not None:
+        overridden["train_only"] = env_train_only.lower() in {"1", "true", "yes"}
+
     return overridden
 
 
@@ -190,7 +194,11 @@ def cl_test(log):
     print("#######################start run#######################")
     print("log:", log)
 
-    _,valid_data,test_data = get_dataloader(log.param.train_batch_size,log.param.eval_batch_size,log.param.dataset,w_aug=False,w_double=False,label_list=None)
+    train_only = getattr(log.param, "train_only", False)
+    if train_only and not is_cold_eval_dataset(log.param.dataset):
+        raise ValueError("EVAL_TRAIN_ONLY is only supported for COLD-style datasets.")
+    if not train_only:
+        _,valid_data,test_data = get_dataloader(log.param.train_batch_size,log.param.eval_batch_size,log.param.dataset,w_aug=False,w_double=False,label_list=None)
 
 
     model_main = primary_encoder_v2_no_pooler_for_con(log.param.hidden_size,log.param.label_size,log.param.model_type) # v2
@@ -210,6 +218,21 @@ def cl_test(log):
     model_main.eval()
     model_main.to(device)
     ###################################################################
+
+    if train_only:
+        train_data, train_posts = build_cold_train_inference_loader(log)
+        train_acc_1, train_f1_1, train_save_pred = test(train_data, model_main, log)
+        train_pred_path = save_prediction_csv(
+            log.param.load_dir,
+            f"{log.param.dataset}_train_predictions.csv",
+            train_posts,
+            train_save_pred,
+            run_tag=run_tag,
+            run_version=run_version,
+        )
+        print(f"Train Accuracy: {train_acc_1:.2f} Train F1: {train_f1_1['macro']:.2f}")
+        print(f"Train predictions are saved to {train_pred_path}")
+        return
 
     val_acc_1,val_f1_1,val_save_pred = test(valid_data,model_main,log)
     test_acc_1,test_f1_1,test_save_pred = test(test_data,model_main,log)

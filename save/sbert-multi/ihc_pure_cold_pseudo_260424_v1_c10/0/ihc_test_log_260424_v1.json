@@ -1,0 +1,23 @@
+{
+    "param": {
+        "dataset": "ihc_pure_c10",
+        "train_batch_size": 8,
+        "eval_batch_size": 8,
+        "hidden_size": 768,
+        "SEED": 0,
+        "model_type": "bert-base-multilingual-cased",
+        "load_dir": "save/sbert-multi/ihc_pure_cold_pseudo_260424_v1_c10/0",
+        "model_filename": "model_260424_v1.pt",
+        "label_size": 2
+    },
+    "valid_f1_score_1": {
+        "macro": 0.7367528800888026,
+        "weighted": 0.7830055449442737
+    },
+    "test_f1_score_1": {
+        "macro": 0.7446919864755779,
+        "weighted": 0.7931389169004074
+    },
+    "valid_accuracy_1": 78.59630324136083,
+    "test_accuracy_1": 79.53936797000536
+}
