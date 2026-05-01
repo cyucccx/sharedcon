@@ -147,11 +147,7 @@ def get_dataloader(train_batch_size,eval_batch_size,dataset,seed=None,w_aug=True
         train_dataset = dynahate_dataset(data["train"],training=True,w_aug=w_aug)
         valid_dataset = dynahate_dataset(data["valid"],training=False,w_aug=w_aug)
         test_dataset = dynahate_dataset(data["test"],training=False,w_aug=w_aug)
-    elif "sbic" in dataset:
-        train_dataset = sbic_dataset(data["train"],training=True,w_aug=w_aug)
-        valid_dataset = sbic_dataset(data["valid"],training=False,w_aug=w_aug)
-        test_dataset = sbic_dataset(data["test"],training=False,w_aug=w_aug)
-    elif "cold" in dataset:
+    elif "sbic" in dataset or "cold" in dataset or "toxicn" in dataset:
         train_dataset = sbic_dataset(data["train"],training=True,w_aug=w_aug)
         valid_dataset = sbic_dataset(data["valid"],training=False,w_aug=w_aug)
         test_dataset = sbic_dataset(data["test"],training=False,w_aug=w_aug)
@@ -168,17 +164,12 @@ def get_dataloader(train_batch_size,eval_batch_size,dataset,seed=None,w_aug=True
         # assert not w_aug, "for cross dataset evaluation, we do not consider w_aug"
         collate_fn = collate_fn_dynahate
         collate_fn_w_aug = collate_fn_w_aug_dynahate_imp_con # original1, original2, .... aug1, aug2 
-    elif "sbic" in dataset:
-        # assert not w_aug, "for cross dataset evaluation, we do not consider w_aug"
-        # EXCEPT FOR SBIC, WHICH IS USED FOR TRAIN AS WELL
+    elif "sbic" in dataset or "cold" in dataset or "toxicn" in dataset:
         collate_fn = collate_fn_sbic
         if w_double:
-            raise NotImplementedError("w_double=True is not supported for sbic; double-augmentation collate_fn is missing.")
-        collate_fn_w_aug = collate_fn_w_aug_sbic_imp_con # original1, original2, .... aug1, aug2
-    elif "cold" in dataset:
-        collate_fn = collate_fn_sbic
-        if w_double:
-            raise NotImplementedError("w_double=True is not supported for cold eval; double-augmentation collate_fn is missing.")
+            raise NotImplementedError(
+                "w_double=True is not supported for sbic/cold/toxicn-style datasets; double-augmentation collate_fn is missing."
+            )
         collate_fn_w_aug = collate_fn_w_aug_sbic_imp_con
     else:   
         raise NotImplementedError

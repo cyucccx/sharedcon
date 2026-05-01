@@ -117,7 +117,7 @@ def align_pseudo_clusters_to_base(pseudo_dataset, base_prototypes, sent_emb_mode
     if "pseudo_source_cluster" not in pseudo_dataset.columns:
         raise ValueError(
             "Expected pseudo_source_cluster column in mixed pseudo dataset. "
-            "Rebuild raw_dataset/ihc_pure_cold_pseudo/train.tsv with the updated build_pseudo_train_dataset.py first."
+            "Rebuild the mixed raw pseudo dataset train.tsv with the updated build_pseudo_train_dataset.py first."
         )
 
     pseudo_dataset = pseudo_dataset.reset_index(drop=True).copy()
@@ -240,7 +240,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--align_pseudo_to_base',
         action='store_true',
-        help='For ihc_pure_cold_pseudo, preserve base IHC cluster labels and align pseudo COLD clusters to them.',
+        help='For mixed IHC+pseudo datasets, preserve base IHC cluster labels and align pseudo source clusters to them.',
     )
     parser.add_argument(
         '--base_cluster_dataset',
@@ -257,7 +257,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     is_ihc_dataset = args.load_dataset.startswith("ihc_pure")
-    is_mixed_ihc_dataset = args.load_dataset.startswith("ihc_pure_cold_pseudo")
+    is_mixed_ihc_dataset = args.load_dataset.startswith("ihc_pure_") and "_pseudo" in args.load_dataset
 
     # load raw dataset
     if is_ihc_dataset:
@@ -319,7 +319,7 @@ if __name__ == '__main__':
             sent_emb_model=model,
             input_col=input_col,
         )
-        print("aligned pseudo COLD clusters to base IHC clusters")
+        print("aligned pseudo source clusters to base IHC clusters")
     
     else:
         # processing each classes

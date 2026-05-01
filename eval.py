@@ -25,6 +25,32 @@ from tqdm import tqdm
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
+def get_dataset_family(dataset_name):
+    if "ihc" in dataset_name:
+        return "ihc"
+    if "dynahate" in dataset_name:
+        return "dynahate"
+    if "sbic" in dataset_name or "cold" in dataset_name or "toxicn" in dataset_name:
+        return "post_label"
+    raise NotImplementedError(f"Unsupported evaluation dataset: {dataset_name}")
+
+
+def get_eval_log_base_name(dataset_name):
+    if dataset_name == "dynahate":
+        return "dynahate_test_log.json"
+    if dataset_name == "sbic":
+        return "sbic_test_log.json"
+    if "ihc" in dataset_name:
+        return "ihc_test_log.json"
+    if dataset_name == "sbic_hate":
+        return "sbic_hate_test_log.json"
+    if dataset_name == "cold" or dataset_name.startswith("cold_"):
+        return "cold_test_log.json"
+    if dataset_name == "toxicn":
+        return "toxicn_test_log.json"
+    return f"{dataset_name}_test_log.json"
+
+
 def write_versioned_json(save_dir, base_name, payload, run_tag, run_version):
     dated_path = build_versioned_output_path(save_dir, base_name, run_tag, run_version=run_version)
     with open(dated_path, "w") as fp:
@@ -57,11 +83,15 @@ def apply_eval_env_overrides(param):
     if env_train_only is not None:
         overridden["train_only"] = env_train_only.lower() in {"1", "true", "yes"}
 
+    env_test_only = os.environ.get("EVAL_TEST_ONLY")
+    if env_test_only is not None:
+        overridden["test_only"] = env_test_only.lower() in {"1", "true", "yes"}
+
+    env_save_train_predictions = os.environ.get("EVAL_SAVE_TRAIN_PREDICTIONS")
+    if env_save_train_predictions is not None:
+        overridden["save_train_predictions"] = env_save_train_predictions.lower() in {"1", "true", "yes"}
+
     return overridden
-
-
-def is_cold_eval_dataset(dataset_name):
-    return dataset_name == "cold" or dataset_name.startswith("cold_")
 
 # Credits https://github.com/varsha33/LCL_loss
 def test(test_loader,model_main,log):
@@ -76,22 +106,12 @@ def test(test_loader,model_main,log):
     print(len(test_loader))
     with torch.no_grad():
         for idx,batch in enumerate(test_loader):
-            if "ihc" in log.param.dataset:
-                text_name = "post"
-                label_name = "label"
-            elif "dynahate" in log.param.dataset:
-                text_name = "post"
-                label_name = "label"
-            elif "sbic" in log.param.dataset:
-                text_name = "post"
-                label_name = "label"
-            elif "cold" in log.param.dataset:
+            dataset_family = get_dataset_family(log.param.dataset)
+            if dataset_family in {"ihc", "dynahate", "post_label"}:
                 text_name = "post"
                 label_name = "label"
             else:
-                text_name = "cause"
-                label_name = "emotion"
-                raise NotImplementedError
+                raise NotImplementedError(f"Unsupported dataset family: {dataset_family}")
 
             text = batch[text_name]
             attn = batch[text_name+"_attn_mask"]
@@ -136,7 +156,7 @@ def test(test_loader,model_main,log):
     return total_acc,f1_score_1,save_pred
 
 
-def build_cold_train_inference_loader(log):
+def build_train_inference_loader(log):
     preprocessed_path = resolve_preprocessed_path(log.param.dataset)
     with open(preprocessed_path, "rb") as f:
         data = pickle.load(f)
@@ -195,8 +215,10 @@ def cl_test(log):
     print("log:", log)
 
     train_only = getattr(log.param, "train_only", False)
-    if train_only and not is_cold_eval_dataset(log.param.dataset):
-        raise ValueError("EVAL_TRAIN_ONLY is only supported for COLD-style datasets.")
+    test_only = getattr(log.param, "test_only", False)
+    save_train_predictions = getattr(log.param, "save_train_predictions", False)
+    if train_only and test_only:
+        raise ValueError("EVAL_TRAIN_ONLY and EVAL_TEST_ONLY cannot both be enabled.")
     if not train_only:
         _,valid_data,test_data = get_dataloader(log.param.train_batch_size,log.param.eval_batch_size,log.param.dataset,w_aug=False,w_double=False,label_list=None)
 
@@ -220,7 +242,7 @@ def cl_test(log):
     ###################################################################
 
     if train_only:
-        train_data, train_posts = build_cold_train_inference_loader(log)
+        train_data, train_posts = build_train_inference_loader(log)
         train_acc_1, train_f1_1, train_save_pred = test(train_data, model_main, log)
         train_pred_path = save_prediction_csv(
             log.param.load_dir,
@@ -234,11 +256,17 @@ def cl_test(log):
         print(f"Train predictions are saved to {train_pred_path}")
         return
 
-    val_acc_1,val_f1_1,val_save_pred = test(valid_data,model_main,log)
     test_acc_1,test_f1_1,test_save_pred = test(test_data,model_main,log)
+    if not test_only:
+        val_acc_1,val_f1_1,val_save_pred = test(valid_data,model_main,log)
+        print("Model 1")
+        print(f'Valid Accuracy: {val_acc_1:.2f} Valid F1: {val_f1_1["macro"]:.2f}')
+    else:
+        val_acc_1 = None
+        val_f1_1 = None
 
-    if is_cold_eval_dataset(log.param.dataset):
-        train_data, train_posts = build_cold_train_inference_loader(log)
+    if save_train_predictions:
+        train_data, train_posts = build_train_inference_loader(log)
         train_acc_1, train_f1_1, train_save_pred = test(train_data, model_main, log)
         train_pred_path = save_prediction_csv(
             log.param.load_dir,
@@ -255,7 +283,6 @@ def cl_test(log):
         log.train_prediction_path = train_pred_path
 
     print("Model 1")
-    print(f'Valid Accuracy: {val_acc_1:.2f} Valid F1: {val_f1_1["macro"]:.2f}')
     print(f'Test Accuracy: {test_acc_1:.2f} Test F1: {test_f1_1["macro"]:.2f}')
 
     log.valid_f1_score_1 = val_f1_1
@@ -263,18 +290,13 @@ def cl_test(log):
     log.valid_accuracy_1 = val_acc_1
     log.test_accuracy_1 = test_acc_1
 
-    if log.param.dataset == "dynahate":
-        log_path = write_versioned_json(log.param.load_dir, "dynahate_test_log.json", dict(log), run_tag, run_version)
-    elif log.param.dataset == "sbic":
-        log_path = write_versioned_json(log.param.load_dir, "sbic_test_log.json", dict(log), run_tag, run_version)
-    elif "ihc" in log.param.dataset:
-        log_path = write_versioned_json(log.param.load_dir, "ihc_test_log.json", dict(log), run_tag, run_version)
-    elif log.param.dataset == "sbic_hate":
-        log_path = write_versioned_json(log.param.load_dir, "sbic_hate_test_log.json", dict(log), run_tag, run_version)
-    elif is_cold_eval_dataset(log.param.dataset):
-        log_path = write_versioned_json(log.param.load_dir, "cold_test_log.json", dict(log), run_tag, run_version)
-    else:
-        raise NotImplementedError
+    log_path = write_versioned_json(
+        log.param.load_dir,
+        get_eval_log_base_name(log.param.dataset),
+        dict(log),
+        run_tag,
+        run_version,
+    )
     print(f"evaluation log is saved at {log_path}")
 
 

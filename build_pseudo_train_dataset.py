@@ -40,13 +40,13 @@ def parse_args():
     )
     parser.add_argument(
         "--pseudo_predictions",
-        default="pseudo_clusters/sbert-multi_cold_conf099_global_k50_aligned/selected_cluster_samples.csv",
+        default="pseudo_clusters/sbert-multi_source_conf099_global_k50_aligned/selected_cluster_samples.csv",
         type=str,
         help="Path to eval.py output CSV containing pseudo predictions.",
     )
     parser.add_argument(
         "--output_dir",
-        default="raw_dataset/ihc_pure_cold_pseudo",
+        default="raw_dataset/ihc_pure_source_pseudo",
         type=str,
         help="Directory to write the new train/valid/test files.",
     )
@@ -78,6 +78,12 @@ def parse_args():
         "--cumulative",
         action="store_true",
         help="Keep existing pseudo rows in --ihc_train and only remove non-pseudo rows when adding new pseudo samples.",
+    )
+    parser.add_argument(
+        "--pseudo_source_name",
+        default="source",
+        type=str,
+        help="Short source dataset name used in generated pseudo row IDs and metadata.",
     )
     parser.add_argument(
         "--seed",
@@ -160,14 +166,14 @@ def fit_pseudo_samples_to_train_capacity(
     return pseudo
 
 
-def build_pseudo_rows(pseudo_df, train_columns):
+def build_pseudo_rows(pseudo_df, train_columns, pseudo_source_name):
     rows = []
     for pseudo in pseudo_df.to_dict(orient="records"):
         pred_label = int(pseudo["pred_label"])
         row = {column: "" for column in train_columns}
 
         if "ID" in row:
-            row["ID"] = f"pseudo_cold_{int(pseudo['row_id'])}"
+            row["ID"] = f"pseudo_{pseudo_source_name}_{int(pseudo['row_id'])}"
         if "class" in row:
             row["class"] = LABEL_MAP[pred_label]
         if "implied_statement" in row:
@@ -218,7 +224,7 @@ def build_pseudo_rows(pseudo_df, train_columns):
     else:
         pseudo_rows["class_ratio_gap"] = pd.NA
     if "true_label" in pseudo_df.columns:
-        pseudo_rows["cold_true_label"] = pseudo_df["true_label"].tolist()
+        pseudo_rows["source_true_label"] = pseudo_df["true_label"].tolist()
 
     return pseudo_rows
 
@@ -304,7 +310,11 @@ def main():
         removable_train_df=removable_train_df,
         removable_clusters=removal_clusters.loc[removable_mask] if removal_clusters is not None else None,
     )
-    pseudo_rows = build_pseudo_rows(pseudo_candidates, train_df.columns.tolist())
+    pseudo_rows = build_pseudo_rows(
+        pseudo_candidates,
+        train_df.columns.tolist(),
+        pseudo_source_name=args.pseudo_source_name,
+    )
 
     if len(pseudo_rows) > len(train_df):
         raise ValueError(
@@ -334,7 +344,7 @@ def main():
         "aligned_similarity": pd.NA,
         "aligned_base_class_name": pd.NA,
         "class_ratio_gap": pd.NA,
-        "cold_true_label": pd.NA,
+        "source_true_label": pd.NA,
     }
     for column, default_value in new_metadata_columns.items():
         if column not in kept_train.columns:
