@@ -10,20 +10,20 @@
         "model_filename": "model_260424_v1.pt",
         "label_size": 2
     },
-    "train_accuracy_1": 56.04058151286636,
+    "train_accuracy_1": 55.55469175153541,
     "train_f1_score_1": {
-        "macro": 0.4864081357504205,
-        "weighted": 0.48428633849226305
+        "macro": 0.48322533664016365,
+        "weighted": 0.4811212174958315
     },
     "train_prediction_path": "save/sbert-multi/ihc_pure_cold_pseudo_260424_v1_c10/0/cold_train_predictions_260424_v1.csv",
     "valid_f1_score_1": {
-        "macro": 0.49157476150896506,
-        "weighted": 0.49130479964528334
+        "macro": 0.48466748710493923,
+        "weighted": 0.4843978947967628
     },
     "test_f1_score_1": {
-        "macro": 0.43177111211974684,
-        "weighted": 0.40001187000925464
+        "macro": 0.43516641212062207,
+        "weighted": 0.4043928079548112
     },
-    "valid_accuracy_1": 56.476442232934225,
-    "test_accuracy_1": 47.26657899680631
+    "valid_accuracy_1": 55.667858808894415,
+    "test_accuracy_1": 47.37929738869059
 }

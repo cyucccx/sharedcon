@@ -65,7 +65,7 @@ def parse_args():
     parser.add_argument(
         "--remove_strategy",
         choices=["random", "label_matched_random", "cluster_matched_random"],
-        default="cluster_matched_random",
+        default="label_matched_random",
         help="How to remove original IHC samples to keep train size unchanged.",
     )
     parser.add_argument(
