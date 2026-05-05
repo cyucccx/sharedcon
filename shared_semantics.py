@@ -13,6 +13,15 @@ from sklearn.metrics import pairwise_distances_argmin_min, pairwise_distances
 np.random.seed(0)
 random.seed(0)
 
+MODEL_NAME_MAP = {
+    "simcse": "./sup-simcse-roberta-large",
+    "angle": "SeanLee97/angle-bert-base-uncased-nli-en-v1",
+    "sbert": "all-MiniLM-L6-v2",
+    "xlmr": "sentence-transformers/stsb-xlm-r-multilingual",
+    "xlm-r": "sentence-transformers/stsb-xlm-r-multilingual",
+    "xlm-roberta-base": "sentence-transformers/stsb-xlm-r-multilingual",
+}
+
 
 
 # given a dataset, compute clustering and select the closest data from each cluster
@@ -77,7 +86,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--cluster_num', default=10,type=int, help='Enter the number of cluster')
     parser.add_argument('--load_dataset', default="ihc_pure",type=str, help='Enter the path of the dataset')
-    parser.add_argument('--load_sent_emb_model', default="simcse",type=str, help='Enter the path/type of the sentence embedding model')
+    parser.add_argument('--load_sent_emb_model', default="xlmr",type=str, help='Enter the path/type of the sentence embedding model')
     args = parser.parse_args()
 
     # load raw dataset
@@ -111,14 +120,17 @@ if __name__ == '__main__':
     
     # load the sentence embedding model
     print(f'LOAD_SENT_EMB_MODEL: {args.load_sent_emb_model}', flush=True)
+    local_files_only = os.environ.get("HF_LOCAL_FILES_ONLY", "0") == "1"
     if args.load_sent_emb_model == "simcse":
-        model = SimCSE("./sup-simcse-roberta-large")
+        model = SimCSE(MODEL_NAME_MAP["simcse"])
     elif args.load_sent_emb_model == "angle":
-        model = AnglE.from_pretrained('SeanLee97/angle-bert-base-uncased-nli-en-v1', pooling_strategy='cls_avg').cuda()
+        model = AnglE.from_pretrained(MODEL_NAME_MAP["angle"], pooling_strategy='cls_avg').cuda()
     elif args.load_sent_emb_model == "sbert":
-        model = SentenceTransformer("all-MiniLM-L6-v2")
+        model = SentenceTransformer(MODEL_NAME_MAP["sbert"], local_files_only=local_files_only)
+    elif args.load_sent_emb_model in {"xlmr", "xlm-r", "xlm-roberta-base"}:
+        model = SentenceTransformer(MODEL_NAME_MAP[args.load_sent_emb_model], local_files_only=local_files_only)
     else:
-        raise NotImplementedError
+        raise NotImplementedError(f"Unsupported sentence embedding model: {args.load_sent_emb_model}")
     
     
     # processing each classes

@@ -36,7 +36,7 @@ def preprocess_data(sent_emb_model, dataset, tokenizer_type):
 			
 			cluster_value = []
 			post_value = []
-			for (columnName, columnData) in data.iteritems():
+			for (columnName, columnData) in data.items():
 				if columnName == 'cluster':
 					cluster_value = columnData.values
 				elif columnName == 'post':
@@ -109,7 +109,7 @@ def preprocess_data(sent_emb_model, dataset, tokenizer_type):
 			cluster_value = []
 			post_value = []
 
-			for (columnName, columnData) in data.iteritems():
+			for (columnName, columnData) in data.items():
 				if columnName == 'cluster':
 					cluster_value = columnData.values
 				elif columnName == 'post':
@@ -174,8 +174,6 @@ def preprocess_data(sent_emb_model, dataset, tokenizer_type):
 		for datatype in ["train","valid","test"]:
 			datafile = data_home + datatype + ".csv"
 			data = pd.read_csv(datafile, sep=',') 
-			data.iteritems = data.items		# AttributeError: 'DataFrame' object has no attribute 'iteritems'
-
 			label1,label2,post = [],[],[]
 
 			for i,one_class in enumerate(data["label"]):
@@ -184,7 +182,7 @@ def preprocess_data(sent_emb_model, dataset, tokenizer_type):
 			cluster_value = []
 			post_value = []
 
-			for (columnName, columnData) in data.iteritems():
+			for (columnName, columnData) in data.items():
 				if columnName == 'cluster':
 					cluster_value = columnData.values
 				elif columnName == 'text':
@@ -249,9 +247,9 @@ if __name__ == '__main__':
 
 	parser = argparse.ArgumentParser(description='Enter tokenizer type')
 
-	parser.add_argument('-m', default="simcse", type=str, help='Enter sentence embedding model')
+	parser.add_argument('-m', default="xlmr", type=str, help='Enter sentence embedding model')
 	parser.add_argument('-d', default="ihc_pure_c10",type=str, help='Enter dataset')
-	parser.add_argument('-t', default="bert-base-uncased",type=str, help='Enter tokenizer type')
+	parser.add_argument('-t', default="xlm-roberta-base",type=str, help='Enter tokenizer type')
 	args = parser.parse_args()
 
 	preprocess_data(args.m, args.d, args.t)

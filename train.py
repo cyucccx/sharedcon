@@ -17,7 +17,7 @@ from sklearn.metrics import f1_score
 import loss_sharedcon
 from model import primary_encoder_v2_no_pooler_for_con
 
-from transformers import AdamW,get_linear_schedule_with_warmup, BertForSequenceClassification 
+from transformers import AdamW,get_linear_schedule_with_warmup
 
 from tqdm import tqdm
 
@@ -317,11 +317,12 @@ def cl_train(log):
     lr_scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=0, num_training_steps=num_training_steps)
 
         
-    if log.param.run_name != "":
-        save_home = "./save/"+log.param.run_name+"/"+log.param.loss_type+"/"+log.param.dataset+"/"+str(log.param.SEED)+"/"
-
-    else:
-        save_home = "./save/"+model_run_time+"/"+log.param.loss_type+"/"+log.param.dataset+"/"+str(log.param.SEED)+"/"
+    save_root = log.param.run_name if log.param.run_name != "" else model_run_time
+    save_parts = [".", "save", save_root]
+    if log.param.loss_type != "":
+        save_parts.append(log.param.loss_type)
+    save_parts.extend([log.param.dataset, str(log.param.SEED)])
+    save_home = os.path.join(*save_parts) + "/"
 
     total_train_acc_curve_1, total_val_acc_curve_1 = [],[]
 
@@ -392,4 +393,3 @@ if __name__ == '__main__':
         log.param.label_size = 2
         
         cl_train(log)
-

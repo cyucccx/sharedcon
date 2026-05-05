@@ -1,25 +1,33 @@
+import os
+
 from torch import nn
 from torch.nn import functional as F
-from transformers import BertModel
+from transformers import AutoModel
 
 # Credits https://github.com/varsha33/LCL_loss
 class primary_encoder_v2_no_pooler_for_con(nn.Module):
 
-    def __init__(self,hidden_size,emotion_size,encoder_type="bert-base-uncased"):
+    def __init__(self,hidden_size,emotion_size,encoder_type="xlm-roberta-base"):
         super(primary_encoder_v2_no_pooler_for_con, self).__init__()
+        local_files_only = os.environ.get("HF_LOCAL_FILES_ONLY", "0") == "1"
 
-        if encoder_type == "bert-base-uncased":
-            options_name = "bert-base-uncased"
-            self.encoder_supcon = BertModel.from_pretrained(options_name,num_labels=emotion_size)
-            self.encoder_supcon.encoder.config.gradient_checkpointing=False
+        model_name_map = {
+            "bert-base-uncased": "bert-base-uncased",
+            "bert-base-multilingual-cased": "bert-base-multilingual-cased",
+            "xlmr": "xlm-roberta-base",
+            "xlm-r": "xlm-roberta-base",
+            "xlm-roberta-base": "xlm-roberta-base",
+            "hatebert": "hate_bert",
+        }
+        if encoder_type not in model_name_map:
+            raise NotImplementedError(f"Unsupported encoder_type: {encoder_type}")
 
-        elif encoder_type == "hatebert":
-            options_name = "hate_bert"
-            self.encoder_supcon = BertModel.from_pretrained(options_name,num_labels=emotion_size)
-            self.encoder_supcon.encoder.config.gradient_checkpointing=False
-
-        else:
-            raise NotImplementedError
+        self.encoder_supcon = AutoModel.from_pretrained(
+            model_name_map[encoder_type],
+            local_files_only=local_files_only,
+        )
+        if hasattr(self.encoder_supcon, "encoder") and hasattr(self.encoder_supcon.encoder, "config"):
+            self.encoder_supcon.encoder.config.gradient_checkpointing = False
 
         self.pooler_dropout = nn.Dropout(0.1)
         self.label = nn.Linear(hidden_size,emotion_size)

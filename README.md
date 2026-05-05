@@ -14,7 +14,7 @@ or adapt another sentence embedding model,
 python shared_semantics.py \
 --cluster_num 10 \
 --load_dataset ihc_pure \
---load_sent_emb_model simcse
+--load_sent_emb_model xlmr
 ```
 
 for proximal anchor experiment

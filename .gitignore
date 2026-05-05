@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 *$py.class
+.DS_Store
 
 # C extensions
 *.so
@@ -166,6 +167,9 @@ raw_dataset/
 sup-simcse-roberta-large/
 preprocessed_data/
 clustered_dataset/
+save/
+logs/
+key_error.pickle
 
 # Figures
 figure_making.ipynb
