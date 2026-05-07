@@ -170,6 +170,12 @@ clustered_dataset/
 save/
 logs/
 key_error.pickle
+!save/
+!save/xlmr/
+!save/xlmr/xlmr_ihc_pure_c10/
+!save/xlmr/xlmr_ihc_pure_c10/0/
+!save/xlmr/xlmr_ihc_pure_c10/0/ihc_test_log*.json
+!save/xlmr/xlmr_ihc_pure_c10/0/toxicn_test_log*.json
 
 # Figures
 figure_making.ipynb

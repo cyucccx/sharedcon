@@ -1,0 +1,21 @@
+{
+    "param": {
+        "dataset": "toxicn",
+        "train_batch_size": 8,
+        "eval_batch_size": 8,
+        "hidden_size": 768,
+        "SEED": 0,
+        "model_type": "xlm-roberta-base",
+        "load_dir": "save/xlmr/xlmr_ihc_pure_c10/0",
+        "model_filename": "model_260506_v0.pt",
+        "test_only": true,
+        "label_size": 2
+    },
+    "valid_f1_score_1": null,
+    "test_f1_score_1": {
+        "macro": 0.5533090250522927,
+        "weighted": 0.5594466716606069
+    },
+    "valid_accuracy_1": null,
+    "test_accuracy_1": 57.94276233927831
+}

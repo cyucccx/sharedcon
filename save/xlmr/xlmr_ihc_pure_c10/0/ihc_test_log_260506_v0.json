@@ -1,0 +1,36 @@
+{
+    "param": {
+        "temperature": 0.5,
+        "run_name": "xlmr",
+        "dataset": "xlmr_ihc_pure_c10",
+        "main_learning_rate": 1e-05,
+        "train_batch_size": 8,
+        "eval_batch_size": 8,
+        "hidden_size": 768,
+        "nepoch": 6,
+        "lambda_loss": 0.75,
+        "loss_type": "",
+        "decay": 0.0,
+        "SEED": 0,
+        "model_type": "xlm-roberta-base",
+        "w_aug": true,
+        "w_sup": false,
+        "save": true,
+        "w_double": false,
+        "w_separate": false,
+        "label_size": 2
+    },
+    "train_loss_1": 0.8651655245678765,
+    "stop_epoch": 2,
+    "valid_f1_score_1": {
+        "macro": 0.7876794745223927,
+        "weighted": 0.8237593046709041
+    },
+    "test_f1_score_1": {
+        "macro": 0.780266338324894,
+        "weighted": 0.8207348858009039
+    },
+    "valid_accuracy_1": 82.48057862309135,
+    "test_accuracy_1": 82.13711837171934,
+    "train_accuracy_1": 82.75
+}
