@@ -9,22 +9,25 @@ import pickle
 import torch
 import torch.utils.data
 from torch import nn
+from torch.optim import AdamW
 
 import train_config as train_config
 from dataset_loader import get_dataloader
-from util import iter_product
+from util import build_versioned_output_path, get_run_tag, get_run_version, iter_product
 from sklearn.metrics import f1_score
 import loss_sharedcon
 from model import primary_encoder_v2_no_pooler_for_con
 
-from transformers import AdamW,get_linear_schedule_with_warmup
+from transformers import get_linear_schedule_with_warmup
 
 from tqdm import tqdm
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Credits https://github.com/varsha33/LCL_loss
 def train(epoch,train_loader,model_main,loss_function,optimizer,lr_scheduler,log):
 
-    model_main.cuda()
+    model_main.to(device)
     model_main.train()
 
     total_true,total_pred_1,acc_curve_1 = [],[],[]
@@ -78,11 +81,10 @@ def train(epoch,train_loader,model_main,loss_function,optimizer,lr_scheduler,log
         if (label.size()[0] is not train_batch_size):# Last batch may have length different than log.param.batch_size
             continue
 
-        if torch.cuda.is_available():
-            text = text.cuda()
-            attn = attn.cuda()
-            label = label.cuda()
-            cluster_label = cluster_label.cuda()
+        text = text.to(device)
+        attn = attn.to(device)
+        label = label.to(device)
+        cluster_label = cluster_label.to(device)
 
         #####################################################################################
         if log.param.w_aug: # text split
@@ -244,10 +246,9 @@ def test(test_loader,model_main,log):
             label = torch.tensor(label)
             label = torch.autograd.Variable(label).long()
 
-            if torch.cuda.is_available():
-                text = text.cuda()
-                attn = attn.cuda()
-                label = label.cuda()
+            text = text.to(device)
+            attn = attn.to(device)
+            label = label.to(device)
 
             last_layer_hidden_states, supcon_feature_1 = model_main.get_cls_features_ptrnsp(text,attn) # #v2
             pred_1 = model_main(last_layer_hidden_states)
@@ -292,6 +293,8 @@ def cl_train(log):
 
     print("#######################start run#######################")
     print("log:", log)
+    run_tag = get_run_tag()
+    run_version = get_run_version(search_root=".")
     train_data,valid_data,test_data = get_dataloader(log.param.train_batch_size,log.param.eval_batch_size,log.param.dataset,w_aug=log.param.w_aug,w_double=log.param.w_double,label_list=None)
     print("len(train_data):", len(train_data)) 
 
@@ -323,6 +326,9 @@ def cl_train(log):
         save_parts.append(log.param.loss_type)
     save_parts.extend([log.param.dataset, str(log.param.SEED)])
     save_home = os.path.join(*save_parts) + "/"
+    acc_curve_path = build_versioned_output_path(save_home, "acc_curve.json", run_tag, run_version=run_version)
+    log_path = build_versioned_output_path(save_home, "log.json", run_tag, run_version=run_version)
+    model_path = build_versioned_output_path(save_home, "model.pt", run_tag, run_version=run_version)
 
     total_train_acc_curve_1, total_val_acc_curve_1 = [],[]
 
@@ -337,7 +343,7 @@ def cl_train(log):
         print('====> Epoch: {} Train loss_1: {:.4f}'.format(epoch, train_loss_1))
 
         os.makedirs(save_home,exist_ok=True)
-        with open(save_home+"/acc_curve.json", 'w') as fp:
+        with open(acc_curve_path, 'w') as fp:
             json.dump({"train_acc_curve_1":total_train_acc_curve_1}, fp,indent=4)
 
         if epoch == 1:
@@ -363,15 +369,14 @@ def cl_train(log):
             log.train_accuracy_1 = train_acc_1
 
             ## load the model
-            with open(save_home+"/log.json", 'w') as fp:
+            with open(log_path, 'w') as fp:
                 json.dump(dict(log), fp,indent=4)
-            fp.close()
 
             ###############################################################################
             # save model
             if log.param.save:
-                torch.save(model_main.state_dict(), os.path.join(save_home, 'model.pt'))
-                print(f"best model is saved at {os.path.join(save_home, 'model.pt')}")
+                torch.save(model_main.state_dict(), model_path)
+                print(f"best model is saved at {model_path}")
 
 ##################################################################################################
 

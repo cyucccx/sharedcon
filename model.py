@@ -1,8 +1,34 @@
 import os
+from pathlib import Path
 
 from torch import nn
 from torch.nn import functional as F
 from transformers import AutoModel
+
+
+def resolve_local_model_path(model_name):
+    if os.path.isdir(model_name):
+        return model_name
+
+    cache_root = Path.home() / ".cache" / "huggingface" / "hub"
+    repo_dir = cache_root / f"models--{model_name.replace('/', '--')}"
+    refs_main = repo_dir / "refs" / "main"
+    if refs_main.is_file():
+        revision = refs_main.read_text().strip()
+        snapshot_dir = repo_dir / "snapshots" / revision
+        if snapshot_dir.is_dir():
+            return str(snapshot_dir)
+
+    snapshots_dir = repo_dir / "snapshots"
+    if snapshots_dir.is_dir():
+        snapshot_candidates = sorted([path for path in snapshots_dir.iterdir() if path.is_dir()])
+        if snapshot_candidates:
+            return str(snapshot_candidates[-1])
+
+    raise FileNotFoundError(
+        f"Could not resolve local Hugging Face cache for {model_name}. "
+        "Download it once online or disable HF_LOCAL_FILES_ONLY."
+    )
 
 # Credits https://github.com/varsha33/LCL_loss
 class primary_encoder_v2_no_pooler_for_con(nn.Module):
@@ -22,8 +48,12 @@ class primary_encoder_v2_no_pooler_for_con(nn.Module):
         if encoder_type not in model_name_map:
             raise NotImplementedError(f"Unsupported encoder_type: {encoder_type}")
 
+        model_source = model_name_map[encoder_type]
+        if local_files_only:
+            model_source = resolve_local_model_path(model_source)
+
         self.encoder_supcon = AutoModel.from_pretrained(
-            model_name_map[encoder_type],
+            model_source,
             local_files_only=local_files_only,
         )
         if hasattr(self.encoder_supcon, "encoder") and hasattr(self.encoder_supcon.encoder, "config"):

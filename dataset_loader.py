@@ -4,7 +4,14 @@ import torch
 import torch.utils.data
 from torch.utils.data import Dataset
 
-from collate_fns_sharedcon import collate_fn_ihc, collate_fn_w_aug_ihc_imp_con, collate_fn_dynahate, collate_fn_sbic, collate_fn_w_aug_sbic_imp_con, collate_fn_w_aug_ihc_imp_con_double, collate_fn_w_aug_sbic_imp_con_double, collate_fn_w_aug_dynahate_imp_con
+from collate_fns_sharedcon import (
+    collate_fn_ihc,
+    collate_fn_w_aug_ihc_imp_con,
+    collate_fn_dynahate,
+    collate_fn_sbic,
+    collate_fn_w_aug_sbic_imp_con,
+    collate_fn_w_aug_dynahate_imp_con,
+)
 
 # Credits https://github.com/varsha33/LCL_loss
 class ihc_dataset(Dataset):
@@ -111,7 +118,7 @@ def get_dataloader(train_batch_size,eval_batch_size,dataset,seed=None,w_aug=True
         train_dataset = dynahate_dataset(data["train"],training=True,w_aug=w_aug)
         valid_dataset = dynahate_dataset(data["valid"],training=False,w_aug=w_aug)
         test_dataset = dynahate_dataset(data["test"],training=False,w_aug=w_aug)
-    elif "sbic" in dataset:
+    elif "sbic" in dataset or "toxicn" in dataset:
         train_dataset = sbic_dataset(data["train"],training=True,w_aug=w_aug)
         valid_dataset = sbic_dataset(data["valid"],training=False,w_aug=w_aug)
         test_dataset = sbic_dataset(data["test"],training=False,w_aug=w_aug)
@@ -121,19 +128,19 @@ def get_dataloader(train_batch_size,eval_batch_size,dataset,seed=None,w_aug=True
     if "ihc" in dataset:
         collate_fn = collate_fn_ihc
         if w_double:
-            collate_fn_w_aug = collate_fn_w_aug_ihc_imp_con_double # original1, original2, .... aug1, aug2 
+            raise NotImplementedError("w_double=True is not supported in this codebase; missing ihc double-augmentation collate_fn.")
         else:
             collate_fn_w_aug = collate_fn_w_aug_ihc_imp_con # original1, original2, .... aug1, aug2 
     elif "dynahate" in dataset:
         # assert not w_aug, "for cross dataset evaluation, we do not consider w_aug"
         collate_fn = collate_fn_dynahate
         collate_fn_w_aug = collate_fn_w_aug_dynahate_imp_con # original1, original2, .... aug1, aug2 
-    elif "sbic" in dataset:
+    elif "sbic" in dataset or "toxicn" in dataset:
         # assert not w_aug, "for cross dataset evaluation, we do not consider w_aug"
         # EXCEPT FOR SBIC, WHICH IS USED FOR TRAIN AS WELL
         collate_fn = collate_fn_sbic
         if w_double:
-            collate_fn_w_aug = collate_fn_w_aug_sbic_imp_con_double # original1, original2, .... aug1, aug2 
+            raise NotImplementedError("w_double=True is not supported in this codebase; missing sbic/toxicn double-augmentation collate_fn.")
         else:
             collate_fn_w_aug = collate_fn_w_aug_sbic_imp_con # original1, original2, .... aug1, aug2
     else:   
@@ -150,4 +157,3 @@ def get_dataloader(train_batch_size,eval_batch_size,dataset,seed=None,w_aug=True
 
 
     return train_iter,valid_iter,test_iter
-

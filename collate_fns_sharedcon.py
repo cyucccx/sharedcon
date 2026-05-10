@@ -31,8 +31,8 @@ def collate_fn_ihc(data):
 
     d={}
     d["label"] = item_info["label"]
-    d["post"] = post_batch.cuda()
-    d["post_attn_mask"] = post_attn_mask.cuda()
+    d["post"] = post_batch
+    d["post_attn_mask"] = post_attn_mask
 
     return d
 
@@ -126,10 +126,8 @@ def collate_fn_dynahate(data):
 
     d={}
     d["label"] = item_info["label"]
-    # d["post"] = post_batch
-    d["post"] = post_batch.cuda()
-    # d["post_attn_mask"] = post_attn_mask
-    d["post_attn_mask"] = post_attn_mask.cuda()
+    d["post"] = post_batch
+    d["post_attn_mask"] = post_attn_mask
 
     return d
 
@@ -161,10 +159,8 @@ def collate_fn_sbic(data):
 
     d={}
     d["label"] = item_info["label"]
-    # d["post"] = post_batch
-    d["post"] = post_batch.cuda()
-    # d["post_attn_mask"] = post_attn_mask
-    d["post_attn_mask"] = post_attn_mask.cuda()
+    d["post"] = post_batch
+    d["post_attn_mask"] = post_attn_mask
 
     return d
 
