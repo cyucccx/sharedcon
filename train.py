@@ -98,7 +98,7 @@ def train(epoch,train_loader,model_main,loss_function,optimizer,lr_scheduler,log
         assert log.param.w_double, "w_double should be set to True for w_separate=True option"
     
     for idx,batch in enumerate(train_loader):
-        if "ihc" in log.param.dataset or 'dynahate' in log.param.dataset or 'sbic' in log.param.dataset:
+        if "ihc" in log.param.dataset or 'dynahate' in log.param.dataset or 'sbic' in log.param.dataset or 'toxicn' in log.param.dataset:
             text_name = "post"
             label_name1 = "label"
             label_name2 = "cluster_label"
@@ -268,7 +268,7 @@ def test(test_loader,model_main,log):
             elif "dynahate" in log.param.dataset:
                 text_name = "post"
                 label_name1 = "label"
-            elif "sbic" in log.param.dataset:
+            elif "sbic" in log.param.dataset or "toxicn" in log.param.dataset:
                 text_name = "post"
                 label_name1 = "label"
             else:

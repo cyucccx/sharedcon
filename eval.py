@@ -46,7 +46,7 @@ def get_eval_log_base_name(dataset_name):
         return "sbic_hate_test_log.json"
     if dataset_name == "cold" or dataset_name.startswith("cold_"):
         return "cold_test_log.json"
-    if dataset_name == "toxicn":
+    if "toxicn" in dataset_name:
         return "toxicn_test_log.json"
     return f"{dataset_name}_test_log.json"
 
@@ -216,8 +216,9 @@ def cl_test(log):
 
     train_only = getattr(log.param, "train_only", False)
     test_only = getattr(log.param, "test_only", False)
+    effective_test_only = test_only or ("toxicn" in log.param.dataset)
     save_train_predictions = getattr(log.param, "save_train_predictions", False)
-    if train_only and test_only:
+    if train_only and effective_test_only:
         raise ValueError("EVAL_TRAIN_ONLY and EVAL_TEST_ONLY cannot both be enabled.")
     if not train_only:
         _,valid_data,test_data = get_dataloader(log.param.train_batch_size,log.param.eval_batch_size,log.param.dataset,w_aug=False,w_double=False,label_list=None)
@@ -257,7 +258,7 @@ def cl_test(log):
         return
 
     test_acc_1,test_f1_1,test_save_pred = test(test_data,model_main,log)
-    if not test_only:
+    if not effective_test_only:
         val_acc_1,val_f1_1,val_save_pred = test(valid_data,model_main,log)
         print("Model 1")
         print(f'Valid Accuracy: {val_acc_1:.2f} Valid F1: {val_f1_1["macro"]:.2f}')

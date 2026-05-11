@@ -1,0 +1,23 @@
+{
+    "param": {
+        "dataset": "sbert-multi_toxicn",
+        "train_batch_size": 8,
+        "eval_batch_size": 8,
+        "hidden_size": 768,
+        "SEED": 0,
+        "model_type": "bert-base-multilingual-cased",
+        "load_dir": "save/sbert-multi/toxicn_c10/0",
+        "model_filename": "model_260510_v0.pt",
+        "train_only": false,
+        "test_only": false,
+        "save_train_predictions": false,
+        "label_size": 2
+    },
+    "valid_f1_score_1": null,
+    "test_f1_score_1": {
+        "macro": 0.7851024166187819,
+        "weighted": 0.7856696681811894
+    },
+    "valid_accuracy_1": null,
+    "test_accuracy_1": 78.55661551223558
+}

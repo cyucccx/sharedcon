@@ -1,8 +1,8 @@
 tuning_param  = ["dataset", "load_dir", "model_filename"]
-dataset = ["sbert-multi_ihc_pure_c10", "toxicn"]  # datasets for evaluation
+dataset = ["ihc_pure_c10", "sbert-multi_toxicn"]  # datasets for evaluation
 
 # saved model location (folder containing model.pt from your training run)
-load_dir = ["./save/sbert-multi/sbert-multi_ihc_pure_c10/0"]
+load_dir = ["./save/sbert-multi/toxicn_c10/0"]
 model_filename = [""]
 
 train_batch_size = 8

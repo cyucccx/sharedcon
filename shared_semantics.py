@@ -3,6 +3,7 @@ import os
 import numpy as np
 import random
 import argparse
+import json
 from angle_emb import AnglE
 from simcse import SimCSE
 from sentence_transformers import SentenceTransformer
@@ -14,6 +15,48 @@ from util import ensure_output_dir_is_new
 
 np.random.seed(0)
 random.seed(0)
+
+
+def split_train_valid_by_label(dataset, label_col, valid_ratio=0.1, random_state=0):
+    train_parts = []
+    valid_parts = []
+
+    for _, label_df in dataset.groupby(label_col):
+        label_df = label_df.sample(frac=1, random_state=random_state).reset_index(drop=True)
+        if len(label_df) <= 1:
+            train_parts.append(label_df)
+            continue
+
+        valid_count = max(1, int(round(len(label_df) * valid_ratio)))
+        valid_count = min(valid_count, len(label_df) - 1)
+
+        valid_parts.append(label_df.iloc[:valid_count].copy())
+        train_parts.append(label_df.iloc[valid_count:].copy())
+
+    train_df = pd.concat(train_parts, ignore_index=True).sample(frac=1, random_state=random_state).reset_index(drop=True)
+    if valid_parts:
+        valid_df = pd.concat(valid_parts, ignore_index=True).sample(frac=1, random_state=random_state).reset_index(drop=True)
+    else:
+        valid_df = train_df.iloc[0:0].copy()
+
+    return train_df, valid_df
+
+
+def load_toxicn_splits(input_dir, valid_ratio=0.1, random_state=0):
+    with open(os.path.join(input_dir, "train.json"), "r") as f:
+        train_records = json.load(f)
+    with open(os.path.join(input_dir, "test.json"), "r") as f:
+        test_records = json.load(f)
+
+    full_train_df = pd.DataFrame(train_records)
+    test_df = pd.DataFrame(test_records)
+    train_df, valid_df = split_train_valid_by_label(
+        full_train_df,
+        label_col="toxic",
+        valid_ratio=valid_ratio,
+        random_state=random_state,
+    )
+    return train_df, valid_df, test_df
 
 
 def load_sentence_encoder(model_name):
@@ -290,6 +333,16 @@ if __name__ == '__main__':
         test_dataset = pd.read_csv(os.path.join('raw_dataset', 'COLDataset', 'test.csv'), delimiter=',', header=0)
         input_col = 'TEXT'
         class_col = 'label'
+        hate_class = 1
+        not_hate_class = 0
+    elif args.load_dataset == "toxicn":
+        train_dataset, valid_dataset, test_dataset = load_toxicn_splits(
+            os.path.join("raw_dataset", "ToxiCN", "data"),
+            valid_ratio=0.1,
+            random_state=0,
+        )
+        input_col = "content"
+        class_col = "toxic"
         hate_class = 1
         not_hate_class = 0
     else:

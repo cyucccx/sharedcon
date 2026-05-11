@@ -22,13 +22,20 @@ def resolve_preprocessed_path(dataset):
     if env_override:
         candidate_paths.append(env_override)
 
-    candidate_paths.extend(
-        [
-            os.path.join("preprocessed_data", f"preprocessed_{dataset}.pkl"),
-            os.path.join("preprocessed_data", f"preprocessed_sbert-multi_{dataset}.pkl"),
-            os.path.join("preprocessed_data", f"preprocessed_simcse_{dataset}.pkl"),
-        ]
-    )
+    dataset_variants = [dataset]
+    for prefix in ("sbert-multi_", "simcse_", "xlmr_"):
+        if dataset.startswith(prefix):
+            dataset_variants.append(dataset[len(prefix):])
+
+    for variant in dataset_variants:
+        candidate_paths.extend(
+            [
+                os.path.join("preprocessed_data", f"preprocessed_{variant}.pkl"),
+                os.path.join("preprocessed_data", f"preprocessed_sbert-multi_{variant}.pkl"),
+                os.path.join("preprocessed_data", f"preprocessed_simcse_{variant}.pkl"),
+                os.path.join("preprocessed_data", f"preprocessed_xlmr_{variant}.pkl"),
+            ]
+        )
 
     for candidate_path in candidate_paths:
         if os.path.isfile(candidate_path):

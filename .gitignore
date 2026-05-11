@@ -173,6 +173,7 @@ pseudo_clusters/
 save/**
 !save/**/
 !save/**/*.json
+save/xlmr/**/acc_curve*.json
 save/**/.DS_Store
 save/**/model*.pt
 save/**/*predictions*.csv

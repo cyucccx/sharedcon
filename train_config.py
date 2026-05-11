@@ -1,5 +1,5 @@
-# Baseline run: train directly from the existing IHC clustered/tokenized data.
-dataset = ["sbert-multi_ihc_pure_c10"]
+# Baseline 2: train directly from clustered/tokenized ToxiCN labeled data.
+dataset = ["toxicn_c10"]
 
 
 tuning_param  = ["lambda_loss", "main_learning_rate","train_batch_size","eval_batch_size","nepoch","temperature","SEED","dataset", "decay"] ## list of possible paramters to be tuned

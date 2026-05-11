@@ -247,6 +247,73 @@ def preprocess_data(sent_emb_model, dataset, tokenizer_type, output_path=None):
 				pickle.dump(data_dict, f)
 			print(f'The tokenized data is saved at {output_path}')
 
+	elif "toxicn" in dataset:
+		data_dict = {}
+		data_home = f"clustered_dataset/{sent_emb_model}/{dataset}/"
+
+		for datatype in ["train","valid","test"]:
+			datafile = data_home + datatype + ".csv"
+			data = pd.read_csv(datafile, sep=',')
+			label1, label2, post = [], [], []
+
+			for one_class in data["toxic"]:
+				label1.append(int(one_class))
+
+			cluster_value = []
+			post_value = []
+
+			for (columnName, columnData) in data.items():
+				if columnName == 'cluster':
+					cluster_value = columnData.values
+				elif columnName == 'content':
+					post_value = columnData.values
+
+			for one_cluster, one_post in zip(cluster_value, post_value):
+				label2.append(one_cluster)
+				post.append(one_post)
+
+			if datatype == "train":
+				augmented_post = []
+				for _, one_centroid_sample in enumerate(data["centroid_sample"]):
+					augmented_post.append(one_centroid_sample)
+
+				print("Tokenizing data")
+				tokenizer = load_tokenizer()
+				tokenized_post = tokenizer.batch_encode_plus(post).input_ids
+				tokenized_post_augmented = tokenizer.batch_encode_plus(augmented_post).input_ids
+
+				tokenized_combined_prompt = [list(i) for i in zip(tokenized_post, tokenized_post_augmented)]
+				combined_prompt = [list(i) for i in zip(post, augmented_post)]
+				combined_label = [list(i) for i in zip(label1, label1)]
+				combined_cluster_label = [list(i) for i in zip(label2, label2)]
+
+				processed_data = {}
+				processed_data["tokenized_post"] = tokenized_combined_prompt
+				processed_data["label"] = combined_label
+				processed_data["cluster_label"] = combined_cluster_label
+				processed_data["post"] = combined_prompt
+
+				processed_data = pd.DataFrame.from_dict(processed_data)
+				data_dict[datatype] = processed_data
+
+			else:
+				print("Tokenizing data")
+				tokenizer = load_tokenizer()
+				tokenized_post = tokenizer.batch_encode_plus(post).input_ids
+
+				processed_data = {}
+				processed_data["tokenized_post"] = tokenized_post
+				processed_data["label"] = label1
+				processed_data["cluster_label"] = label2
+				processed_data["post"] = post
+
+				processed_data = pd.DataFrame.from_dict(processed_data)
+				data_dict[datatype] = processed_data
+
+			with open(output_path, 'wb') as f:
+				pickle.dump(data_dict, f)
+			print(f'The tokenized data is saved at {output_path}')
+
 
 	else:
 		raise NotImplementedError
