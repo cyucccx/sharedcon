@@ -176,13 +176,20 @@ def build_train_inference_loader(log):
     except AttributeError:
         train_posts = list(train_frame["post"])
 
-    return train_loader, train_posts
+    if "source_row_id" in train_frame.columns:
+        train_row_ids = train_frame["source_row_id"].astype(int).tolist()
+    else:
+        train_row_ids = list(range(len(train_frame)))
+
+    return train_loader, train_posts, train_row_ids
 
 
-def save_prediction_csv(output_dir, base_name, posts, save_pred, run_tag=None, run_version=None):
+def save_prediction_csv(output_dir, base_name, posts, save_pred, row_ids=None, run_tag=None, run_version=None):
     pred_probs = np.array(save_pred["pred_prob_1"])
+    if row_ids is None:
+        row_ids = list(range(len(save_pred["pred_1"])))
     pred_frame = {
-        "row_id": list(range(len(save_pred["pred_1"]))),
+        "row_id": row_ids,
         "post": posts,
         "true_label": save_pred["true"],
         "pred_label": save_pred["pred_1"],
@@ -216,10 +223,10 @@ def cl_test(log):
 
     train_only = getattr(log.param, "train_only", False)
     test_only = getattr(log.param, "test_only", False)
-    effective_test_only = test_only or ("toxicn" in log.param.dataset)
     save_train_predictions = getattr(log.param, "save_train_predictions", False)
-    if train_only and effective_test_only:
+    if train_only and test_only:
         raise ValueError("EVAL_TRAIN_ONLY and EVAL_TEST_ONLY cannot both be enabled.")
+    effective_test_only = test_only or ((not train_only) and ("toxicn" in log.param.dataset))
     if not train_only:
         _,valid_data,test_data = get_dataloader(log.param.train_batch_size,log.param.eval_batch_size,log.param.dataset,w_aug=False,w_double=False,label_list=None)
 
@@ -243,13 +250,14 @@ def cl_test(log):
     ###################################################################
 
     if train_only:
-        train_data, train_posts = build_train_inference_loader(log)
+        train_data, train_posts, train_row_ids = build_train_inference_loader(log)
         train_acc_1, train_f1_1, train_save_pred = test(train_data, model_main, log)
         train_pred_path = save_prediction_csv(
             log.param.load_dir,
             f"{log.param.dataset}_train_predictions.csv",
             train_posts,
             train_save_pred,
+            row_ids=train_row_ids,
             run_tag=run_tag,
             run_version=run_version,
         )
@@ -267,13 +275,14 @@ def cl_test(log):
         val_f1_1 = None
 
     if save_train_predictions:
-        train_data, train_posts = build_train_inference_loader(log)
+        train_data, train_posts, train_row_ids = build_train_inference_loader(log)
         train_acc_1, train_f1_1, train_save_pred = test(train_data, model_main, log)
         train_pred_path = save_prediction_csv(
             log.param.load_dir,
             f"{log.param.dataset}_train_predictions.csv",
             train_posts,
             train_save_pred,
+            row_ids=train_row_ids,
             run_tag=run_tag,
             run_version=run_version,
         )

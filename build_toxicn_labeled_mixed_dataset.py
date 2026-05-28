@@ -31,10 +31,10 @@ def parse_args():
         )
     )
     parser.add_argument("--ihc_dir", default="raw_dataset/ihc_pure", type=str)
-    parser.add_argument("--toxicn_dir", default="raw_dataset/ToxiCN/data", type=str)
+    parser.add_argument("--toxicn_dir", default="raw_dataset/ToxiCN_filtered", type=str)
     parser.add_argument(
         "--output_dir",
-        default="raw_dataset/ihc_pure_toxicn_labeled_balanced50_260511_v0",
+        default="raw_dataset/ihc_pure_toxicn_filtered_labeled_balanced50",
         type=str,
     )
     parser.add_argument(
@@ -170,7 +170,8 @@ def build_eval_replacements(selected_toxicn, split_name):
 
 def add_source_row_id(df):
     df = df.copy().reset_index(drop=True)
-    df["source_row_id"] = df.index
+    if "source_row_id" not in df.columns:
+        df["source_row_id"] = df.index
     return df
 
 

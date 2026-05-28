@@ -6,21 +6,21 @@
         "hidden_size": 768,
         "SEED": 0,
         "model_type": "bert-base-multilingual-cased",
-        "load_dir": "save/sbert-multi/ihc_pure_toxicn_labeled_balanced50_260511_v0_c10/0",
-        "model_filename": "model_260512_v0.pt",
+        "load_dir": "save/sbert-multi/ihc_pure_toxicn_filtered_labeled_balanced50_260528_v0_c10/0",
+        "model_filename": "model_260528_v0.pt",
         "train_only": false,
         "test_only": false,
         "save_train_predictions": false,
         "label_size": 2
     },
     "valid_f1_score_1": {
-        "macro": 0.7402732985688569,
-        "weighted": 0.785568136768898
+        "macro": 0.7402700435042765,
+        "weighted": 0.7850565122242545
     },
     "test_f1_score_1": {
-        "macro": 0.7449636501846251,
-        "weighted": 0.7941442916148488
+        "macro": 0.7366853841359113,
+        "weighted": 0.787282221166716
     },
-    "valid_accuracy_1": 78.81060809000803,
-    "test_accuracy_1": 79.72683449384039
+    "valid_accuracy_1": 78.70345566568443,
+    "test_accuracy_1": 79.03053026245313
 }

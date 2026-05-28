@@ -20,7 +20,7 @@ def build_split_frame(records, tokenizer, label_field):
     labels = [int(record[label_field]) for record in records]
     tokenized_post = tokenizer.batch_encode_plus(posts).input_ids
 
-    return pd.DataFrame.from_dict(
+    frame = pd.DataFrame.from_dict(
         {
             "tokenized_post": tokenized_post,
             "label": labels,
@@ -32,6 +32,12 @@ def build_split_frame(records, tokenizer, label_field):
             "expression": [record.get("expression") for record in records],
         }
     )
+    if any("source_row_id" in record for record in records):
+        frame["source_row_id"] = [
+            record.get("source_row_id", row_id)
+            for row_id, record in enumerate(records)
+        ]
+    return frame
 
 
 def save_preprocessed_dataset(train_records, eval_records, output_path, tokenizer_name, label_field, local_files_only):
