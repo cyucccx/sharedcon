@@ -6,21 +6,21 @@
         "hidden_size": 768,
         "SEED": 0,
         "model_type": "bert-base-multilingual-cased",
-        "load_dir": "save/sbert-multi/toxicn_c10/0",
-        "model_filename": "model_260510_v0.pt",
+        "load_dir": "save/sbert-multi/toxicn_filtered_c10/0",
+        "model_filename": "model_260529_v0.pt",
         "train_only": false,
         "test_only": false,
         "save_train_predictions": false,
         "label_size": 2
     },
     "valid_f1_score_1": {
-        "macro": 0.4890591539138359,
-        "weighted": 0.4918402130777783
+        "macro": 0.5157500743525004,
+        "weighted": 0.5246590109513772
     },
     "test_f1_score_1": {
-        "macro": 0.4934002735443448,
-        "weighted": 0.5040879962253507
+        "macro": 0.5159728447348781,
+        "weighted": 0.5323112602069683
     },
-    "valid_accuracy_1": 48.915081703723544,
-    "test_accuracy_1": 49.46438136047134
+    "valid_accuracy_1": 51.674256630056256,
+    "test_accuracy_1": 51.90144617032673
 }

@@ -335,9 +335,14 @@ if __name__ == '__main__':
         class_col = 'label'
         hate_class = 1
         not_hate_class = 0
-    elif args.load_dataset == "toxicn":
+    elif args.load_dataset in {"toxicn", "toxicn_filtered"}:
+        toxicn_input_dir = (
+            os.path.join("raw_dataset", "ToxiCN_filtered")
+            if args.load_dataset == "toxicn_filtered"
+            else os.path.join("raw_dataset", "ToxiCN", "data")
+        )
         train_dataset, valid_dataset, test_dataset = load_toxicn_splits(
-            os.path.join("raw_dataset", "ToxiCN", "data"),
+            toxicn_input_dir,
             valid_ratio=0.1,
             random_state=0,
         )
