@@ -15,7 +15,7 @@ from torch import nn
 import eval_config as train_config
 from dataset_loader import get_dataloader, resolve_preprocessed_path, sbic_dataset
 from util import build_versioned_output_path, get_run_tag, extract_run_version, iter_product, resolve_checkpoint_path
-from sklearn.metrics import f1_score
+from sklearn.metrics import f1_score, precision_score, recall_score
 
 from model import primary_encoder_v2_no_pooler_for_con
 from collate_fns_sharedcon import collate_fn_sbic
@@ -143,7 +143,24 @@ def test(test_loader,model_main,log):
 
     f1_score_1 = f1_score(total_true,total_pred_1, average="macro")
     f1_score_1_w = f1_score(total_true,total_pred_1, average="weighted")
-    f1_score_1 = {"macro":f1_score_1,"weighted":f1_score_1_w}
+    positive_precision_1 = precision_score(
+        total_true,
+        total_pred_1,
+        pos_label=1,
+        zero_division=0,
+    )
+    positive_recall_1 = recall_score(
+        total_true,
+        total_pred_1,
+        pos_label=1,
+        zero_division=0,
+    )
+    f1_score_1 = {
+        "macro": f1_score_1,
+        "weighted": f1_score_1_w,
+        "positive_precision": positive_precision_1,
+        "positive_recall": positive_recall_1,
+    }
 
     total_acc = 100 * total_num_corrects / total_num
 
@@ -261,7 +278,12 @@ def cl_test(log):
             run_tag=run_tag,
             run_version=run_version,
         )
-        print(f"Train Accuracy: {train_acc_1:.2f} Train F1: {train_f1_1['macro']:.2f}")
+        print(
+            f"Train Accuracy: {train_acc_1:.2f} "
+            f"Train F1: {train_f1_1['macro']:.2f} "
+            f"Train P(+): {train_f1_1['positive_precision']:.2f} "
+            f"Train R(+): {train_f1_1['positive_recall']:.2f}"
+        )
         print(f"Train predictions are saved to {train_pred_path}")
         return
 
@@ -269,7 +291,12 @@ def cl_test(log):
     if not effective_test_only:
         val_acc_1,val_f1_1,val_save_pred = test(valid_data,model_main,log)
         print("Model 1")
-        print(f'Valid Accuracy: {val_acc_1:.2f} Valid F1: {val_f1_1["macro"]:.2f}')
+        print(
+            f'Valid Accuracy: {val_acc_1:.2f} '
+            f'Valid F1: {val_f1_1["macro"]:.2f} '
+            f'Valid P(+): {val_f1_1["positive_precision"]:.2f} '
+            f'Valid R(+): {val_f1_1["positive_recall"]:.2f}'
+        )
     else:
         val_acc_1 = None
         val_f1_1 = None
@@ -286,14 +313,24 @@ def cl_test(log):
             run_tag=run_tag,
             run_version=run_version,
         )
-        print(f"Train Accuracy: {train_acc_1:.2f} Train F1: {train_f1_1['macro']:.2f}")
+        print(
+            f"Train Accuracy: {train_acc_1:.2f} "
+            f"Train F1: {train_f1_1['macro']:.2f} "
+            f"Train P(+): {train_f1_1['positive_precision']:.2f} "
+            f"Train R(+): {train_f1_1['positive_recall']:.2f}"
+        )
         print(f"Train predictions are saved to {train_pred_path}")
         log.train_accuracy_1 = train_acc_1
         log.train_f1_score_1 = train_f1_1
         log.train_prediction_path = train_pred_path
 
     print("Model 1")
-    print(f'Test Accuracy: {test_acc_1:.2f} Test F1: {test_f1_1["macro"]:.2f}')
+    print(
+        f'Test Accuracy: {test_acc_1:.2f} '
+        f'Test F1: {test_f1_1["macro"]:.2f} '
+        f'Test P(+): {test_f1_1["positive_precision"]:.2f} '
+        f'Test R(+): {test_f1_1["positive_recall"]:.2f}'
+    )
 
     log.valid_f1_score_1 = val_f1_1
     log.test_f1_score_1 = test_f1_1
