@@ -1,0 +1,30 @@
+{
+    "param": {
+        "dataset": "ihc_pure_c10",
+        "train_batch_size": 8,
+        "eval_batch_size": 8,
+        "hidden_size": 768,
+        "SEED": 0,
+        "model_type": "bert-base-multilingual-cased",
+        "load_dir": "save/sbert-multi/ihc_pure_toxicn_filtered_trainpool_260530_pseudo_only_c10/0",
+        "model_filename": "model_260607_v0.pt",
+        "train_only": false,
+        "test_only": false,
+        "save_train_predictions": false,
+        "label_size": 2
+    },
+    "valid_f1_score_1": {
+        "macro": 0.6555676837540307,
+        "weighted": 0.7050610991646175,
+        "positive_precision": 0.4934865900383142,
+        "positive_recall": 0.5812274368231047
+    },
+    "test_f1_score_1": {
+        "macro": 0.6544118891555726,
+        "weighted": 0.7077337241798886,
+        "positive_precision": 0.48128342245989303,
+        "positive_recall": 0.5876865671641791
+    },
+    "valid_accuracy_1": 69.86338065898741,
+    "test_accuracy_1": 69.97857525441886
+}
