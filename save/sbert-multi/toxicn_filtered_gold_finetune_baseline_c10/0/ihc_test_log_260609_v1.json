@@ -1,0 +1,30 @@
+{
+    "param": {
+        "dataset": "ihc_pure_c10",
+        "train_batch_size": 8,
+        "eval_batch_size": 8,
+        "hidden_size": 768,
+        "SEED": 0,
+        "model_type": "bert-base-multilingual-cased",
+        "load_dir": "save/sbert-multi/toxicn_filtered_gold_finetune_baseline_c10/0",
+        "model_filename": "model_260609_v1.pt",
+        "train_only": false,
+        "test_only": false,
+        "save_train_predictions": false,
+        "label_size": 2
+    },
+    "valid_f1_score_1": {
+        "macro": 0.6765118247079382,
+        "weighted": 0.7026061588391701,
+        "positive_precision": 0.4861995753715499,
+        "positive_recall": 0.8267148014440433
+    },
+    "test_f1_score_1": {
+        "macro": 0.6848368018193335,
+        "weighted": 0.7177582908246815,
+        "positive_precision": 0.49026345933562426,
+        "positive_recall": 0.7985074626865671
+    },
+    "valid_accuracy_1": 68.92579694615591,
+    "test_accuracy_1": 70.38028923406534
+}
